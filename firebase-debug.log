@@ -876,3 +876,177 @@
 [info] 
 [info] Project Console: https://console.firebase.google.com/project/tickr-78b4b/overview
 [info] Hosting URL: https://tickr-io.web.app
+[debug] [2026-11-18T06:00:14.334Z] ----------------------------------------------------------------------
+[debug] [2026-11-18T06:00:14.339Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\Administrator\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only hosting --non-interactive
+[debug] [2026-11-18T06:00:14.339Z] CLI Version:   15.36.0
+[debug] [2026-11-18T06:00:14.339Z] Platform:      win32
+[debug] [2026-11-18T06:00:14.339Z] Node Version:  v24.17.0
+[debug] [2026-11-18T06:00:14.339Z] Detected Agent: unknown
+[debug] [2026-11-18T06:00:14.340Z] Time:          Wed Nov 18 2026 14:00:14 GMT+0800 (China Standard Time)
+[debug] [2026-11-18T06:00:14.340Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-11-18T06:00:17.699Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-11-18T06:00:17.699Z] > authorizing via signed-in user (velodripph@gmail.com)
+[debug] [2026-11-18T06:00:17.699Z] [iam] checking project tickr-78b4b for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2026-11-18T06:00:17.714Z] Checked if tokens are valid: true, expires at: 1794983862401
+[debug] [2026-11-18T06:00:17.715Z] Checked if tokens are valid: true, expires at: 1794983862401
+[debug] [2026-11-18T06:00:17.716Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/tickr-78b4b:testIamPermissions [none]
+[debug] [2026-11-18T06:00:17.716Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/tickr-78b4b:testIamPermissions  x-goog-user-project=tickr-78b4b
+[debug] [2026-11-18T06:00:17.716Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/tickr-78b4b:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2026-11-18T06:00:18.781Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/tickr-78b4b:testIamPermissions 200
+[debug] [2026-11-18T06:00:18.781Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/tickr-78b4b:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2026-11-18T06:00:18.783Z] Checked if tokens are valid: true, expires at: 1794983862401
+[debug] [2026-11-18T06:00:18.784Z] Checked if tokens are valid: true, expires at: 1794983862401
+[debug] [2026-11-18T06:00:18.784Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/tickr-78b4b [none]
+[debug] [2026-11-18T06:00:19.161Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/tickr-78b4b 200
+[debug] [2026-11-18T06:00:19.162Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/tickr-78b4b {"projectId":"tickr-78b4b","projectNumber":"611368633937","displayName":"Tickr","name":"projects/tickr-78b4b","resources":{"hostingSite":"tickr-78b4b"},"state":"ACTIVE","labels":{"firebase":"enabled","firebaseworkflows/environment":"production"},"etag":"1_ed7e40d9-90b7-419c-beec-acfed1262916"}
+[info] 
+[info] === Deploying to 'tickr-78b4b'...
+[info] 
+[info] i  deploying hosting 
+[debug] [2026-11-18T06:00:19.167Z] Checked if tokens are valid: true, expires at: 1794983862401
+[debug] [2026-11-18T06:00:19.168Z] Checked if tokens are valid: true, expires at: 1794983862401
+[debug] [2026-11-18T06:00:19.168Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/tickr-78b4b/sites/tickr-io [none]
+[debug] [2026-11-18T06:00:19.919Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/tickr-78b4b/sites/tickr-io 200
+[debug] [2026-11-18T06:00:19.919Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/tickr-78b4b/sites/tickr-io {"name":"projects/tickr-78b4b/sites/tickr-io","defaultUrl":"https://tickr-io.web.app","appId":"1:611368633937:web:075cecbf974b2f1df1da70","type":"USER_SITE"}
+[debug] [2026-11-18T06:00:19.924Z] Checked if tokens are valid: true, expires at: 1794983862401
+[debug] [2026-11-18T06:00:19.924Z] Checked if tokens are valid: true, expires at: 1794983862401
+[debug] [2026-11-18T06:00:19.925Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/tickr-78b4b/sites/tickr-io/versions [none]
+[debug] [2026-11-18T06:00:19.925Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/tickr-78b4b/sites/tickr-io/versions {"status":"CREATED","labels":{"deployment-tool":"cli-firebase"}}
+[debug] [2026-11-18T06:00:20.894Z] <<< [apiv2][status] POST https://firebasehosting.googleapis.com/v1beta1/projects/tickr-78b4b/sites/tickr-io/versions 200
+[debug] [2026-11-18T06:00:20.894Z] <<< [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/tickr-78b4b/sites/tickr-io/versions {"name":"projects/tickr-78b4b/sites/tickr-io/versions/1a606b4bf7331fd7","status":"CREATED","config":{},"labels":{"deployment-tool":"cli-firebase"}}
+[info] i  hosting[tickr-io]: beginning deploy... 
+[info] i  hosting[tickr-io]: found 18 files in . 
+[debug] [2026-11-18T06:00:20.915Z] [hosting] uploading with 200 concurrency
+[debug] [2026-11-18T06:00:20.932Z] Checked if tokens are valid: true, expires at: 1794983862401
+[debug] [2026-11-18T06:00:20.933Z] Checked if tokens are valid: true, expires at: 1794983862401
+[debug] [2026-11-18T06:00:20.934Z] [hosting] hash cache [] stored for 18 files
+[debug] [2026-11-18T06:00:20.934Z] [hosting][hash queue][FINAL] {"max":13,"min":4,"avg":7.833333333333333,"active":0,"complete":18,"success":18,"errored":0,"retried":0,"total":18,"elapsed":17}
+[debug] [2026-11-18T06:00:20.934Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/tickr-78b4b/sites/tickr-io/versions/1a606b4bf7331fd7:populateFiles [none]
+[debug] [2026-11-18T06:00:20.934Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/tickr-78b4b/sites/tickr-io/versions/1a606b4bf7331fd7:populateFiles {"files":{"/site.webmanifest":"86f07edd3ff57af052a6863db4396694b3fa7525519582a49d22e2b442773c0c","/README.md":"ddd89adbe7c538d0aecdd849e661f989d49f471deaf172fc84885d2d049083f2","/LICENSE":"cdcb6cdebfd69de2b254dbeb0c061710cee1187a7cc009caa631a6181c668de4","/index.html":"47fc55d6a80e37c79d8b4132712b47027aa240f260c1d2eb4f50ebd5deffb6e3","/sw.js":"19dcef3a0d173a7f07714d9e3a11baadc2677e17968bce7b099bb2457682d4b6","/icon.svg":"f619c0d61a44a3893524501ecfadf4607f5a696c6103b0b44d306b3bdb5440b0","/safari-pinned-tab.svg":"82442259590ff91a02c3c110c3ba6d0dd3a524753de56997a81e163806ad43c8","/favicon.svg":"f619c0d61a44a3893524501ecfadf4607f5a696c6103b0b44d306b3bdb5440b0","/favicon.ico":"81efd2779e3c679d197b9bed302540433923794dea92d3f15123cca90638d322","/favicon-48x48.png":"66f216b56c94b9915bb511a6e0cda0a3b4a4ec53c3acaff86633c59f093e3ea8","/favicon-32x32.png":"742c4279df77574b2ec0b3a2c07c7877e5e4b9f6985e75b80b459789d3b61c71","/favicon-16x16.png":"daa07c51358df894a729751230ade19053133a24d08c167684a6152aa88f10eb","/apple-touch-icon.png":"1c0006fbf9fe7e5851679c26cacf3acfb711559f526c846f82dc3fc852c693f4","/apple-touch-icon-152x152.png":"15376c910395d2049dfaf714f01635c1411b326c50d562bee79d92449ac98ee6","/android-chrome-maskable-192x192.png":"8b9a403a5cfd00ef190eb93921f33d25dbc42b884753472678568c8e44e92eee","/android-chrome-192x192.png":"8b9a403a5cfd00ef190eb93921f33d25dbc42b884753472678568c8e44e92eee","/android-chrome-maskable-512x512.png":"21624d4b5681d3c4a85f938515b4d8908829997c9843f9c293209c4872a22ac6","/android-chrome-512x512.png":"21624d4b5681d3c4a85f938515b4d8908829997c9843f9c293209c4872a22ac6"}}
+[debug] [2026-11-18T06:00:21.603Z] <<< [apiv2][status] POST https://firebasehosting.googleapis.com/v1beta1/projects/tickr-78b4b/sites/tickr-io/versions/1a606b4bf7331fd7:populateFiles 200
+[debug] [2026-11-18T06:00:21.603Z] <<< [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/tickr-78b4b/sites/tickr-io/versions/1a606b4bf7331fd7:populateFiles {"uploadRequiredHashes":["daa07c51358df894a729751230ade19053133a24d08c167684a6152aa88f10eb","8b9a403a5cfd00ef190eb93921f33d25dbc42b884753472678568c8e44e92eee","15376c910395d2049dfaf714f01635c1411b326c50d562bee79d92449ac98ee6","66f216b56c94b9915bb511a6e0cda0a3b4a4ec53c3acaff86633c59f093e3ea8","1c0006fbf9fe7e5851679c26cacf3acfb711559f526c846f82dc3fc852c693f4","82442259590ff91a02c3c110c3ba6d0dd3a524753de56997a81e163806ad43c8","f619c0d61a44a3893524501ecfadf4607f5a696c6103b0b44d306b3bdb5440b0","19dcef3a0d173a7f07714d9e3a11baadc2677e17968bce7b099bb2457682d4b6","742c4279df77574b2ec0b3a2c07c7877e5e4b9f6985e75b80b459789d3b61c71","21624d4b5681d3c4a85f938515b4d8908829997c9843f9c293209c4872a22ac6","81efd2779e3c679d197b9bed302540433923794dea92d3f15123cca90638d322"],"uploadUrl":"https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files"}
+[debug] [2026-11-18T06:00:21.604Z] Checked if tokens are valid: true, expires at: 1794983862401
+[debug] [2026-11-18T06:00:21.604Z] Checked if tokens are valid: true, expires at: 1794983862401
+[debug] [2026-11-18T06:00:21.604Z] Checked if tokens are valid: true, expires at: 1794983862401
+[debug] [2026-11-18T06:00:21.604Z] Checked if tokens are valid: true, expires at: 1794983862401
+[debug] [2026-11-18T06:00:21.604Z] Checked if tokens are valid: true, expires at: 1794983862401
+[debug] [2026-11-18T06:00:21.604Z] Checked if tokens are valid: true, expires at: 1794983862401
+[debug] [2026-11-18T06:00:21.605Z] Checked if tokens are valid: true, expires at: 1794983862401
+[debug] [2026-11-18T06:00:21.605Z] Checked if tokens are valid: true, expires at: 1794983862401
+[debug] [2026-11-18T06:00:21.605Z] Checked if tokens are valid: true, expires at: 1794983862401
+[debug] [2026-11-18T06:00:21.605Z] Checked if tokens are valid: true, expires at: 1794983862401
+[debug] [2026-11-18T06:00:21.605Z] Checked if tokens are valid: true, expires at: 1794983862401
+[debug] [2026-11-18T06:00:21.605Z] Checked if tokens are valid: true, expires at: 1794983862401
+[debug] [2026-11-18T06:00:21.606Z] Checked if tokens are valid: true, expires at: 1794983862401
+[debug] [2026-11-18T06:00:21.606Z] Checked if tokens are valid: true, expires at: 1794983862401
+[debug] [2026-11-18T06:00:21.606Z] Checked if tokens are valid: true, expires at: 1794983862401
+[debug] [2026-11-18T06:00:21.606Z] Checked if tokens are valid: true, expires at: 1794983862401
+[debug] [2026-11-18T06:00:21.606Z] Checked if tokens are valid: true, expires at: 1794983862401
+[debug] [2026-11-18T06:00:21.606Z] Checked if tokens are valid: true, expires at: 1794983862401
+[debug] [2026-11-18T06:00:21.606Z] Checked if tokens are valid: true, expires at: 1794983862401
+[debug] [2026-11-18T06:00:21.607Z] Checked if tokens are valid: true, expires at: 1794983862401
+[debug] [2026-11-18T06:00:21.607Z] Checked if tokens are valid: true, expires at: 1794983862401
+[debug] [2026-11-18T06:00:21.607Z] Checked if tokens are valid: true, expires at: 1794983862401
+[debug] [2026-11-18T06:00:21.607Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files/daa07c51358df894a729751230ade19053133a24d08c167684a6152aa88f10eb [none]
+[debug] [2026-11-18T06:00:21.607Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files/daa07c51358df894a729751230ade19053133a24d08c167684a6152aa88f10eb [stream]
+[debug] [2026-11-18T06:00:21.608Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files/8b9a403a5cfd00ef190eb93921f33d25dbc42b884753472678568c8e44e92eee [none]
+[debug] [2026-11-18T06:00:21.608Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files/8b9a403a5cfd00ef190eb93921f33d25dbc42b884753472678568c8e44e92eee [stream]
+[debug] [2026-11-18T06:00:21.609Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files/15376c910395d2049dfaf714f01635c1411b326c50d562bee79d92449ac98ee6 [none]
+[debug] [2026-11-18T06:00:21.609Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files/15376c910395d2049dfaf714f01635c1411b326c50d562bee79d92449ac98ee6 [stream]
+[debug] [2026-11-18T06:00:21.609Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files/66f216b56c94b9915bb511a6e0cda0a3b4a4ec53c3acaff86633c59f093e3ea8 [none]
+[debug] [2026-11-18T06:00:21.610Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files/66f216b56c94b9915bb511a6e0cda0a3b4a4ec53c3acaff86633c59f093e3ea8 [stream]
+[debug] [2026-11-18T06:00:21.610Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files/1c0006fbf9fe7e5851679c26cacf3acfb711559f526c846f82dc3fc852c693f4 [none]
+[debug] [2026-11-18T06:00:21.610Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files/1c0006fbf9fe7e5851679c26cacf3acfb711559f526c846f82dc3fc852c693f4 [stream]
+[debug] [2026-11-18T06:00:21.611Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files/82442259590ff91a02c3c110c3ba6d0dd3a524753de56997a81e163806ad43c8 [none]
+[debug] [2026-11-18T06:00:21.611Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files/82442259590ff91a02c3c110c3ba6d0dd3a524753de56997a81e163806ad43c8 [stream]
+[debug] [2026-11-18T06:00:21.611Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files/f619c0d61a44a3893524501ecfadf4607f5a696c6103b0b44d306b3bdb5440b0 [none]
+[debug] [2026-11-18T06:00:21.611Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files/f619c0d61a44a3893524501ecfadf4607f5a696c6103b0b44d306b3bdb5440b0 [stream]
+[debug] [2026-11-18T06:00:21.612Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files/19dcef3a0d173a7f07714d9e3a11baadc2677e17968bce7b099bb2457682d4b6 [none]
+[debug] [2026-11-18T06:00:21.612Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files/19dcef3a0d173a7f07714d9e3a11baadc2677e17968bce7b099bb2457682d4b6 [stream]
+[debug] [2026-11-18T06:00:21.612Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files/742c4279df77574b2ec0b3a2c07c7877e5e4b9f6985e75b80b459789d3b61c71 [none]
+[debug] [2026-11-18T06:00:21.612Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files/742c4279df77574b2ec0b3a2c07c7877e5e4b9f6985e75b80b459789d3b61c71 [stream]
+[debug] [2026-11-18T06:00:21.613Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files/21624d4b5681d3c4a85f938515b4d8908829997c9843f9c293209c4872a22ac6 [none]
+[debug] [2026-11-18T06:00:21.613Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files/21624d4b5681d3c4a85f938515b4d8908829997c9843f9c293209c4872a22ac6 [stream]
+[debug] [2026-11-18T06:00:21.613Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files/81efd2779e3c679d197b9bed302540433923794dea92d3f15123cca90638d322 [none]
+[debug] [2026-11-18T06:00:21.613Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files/81efd2779e3c679d197b9bed302540433923794dea92d3f15123cca90638d322 [stream]
+[debug] [2026-11-18T06:00:21.621Z] [hosting][populate queue][FINAL] {"max":675,"min":675,"avg":675,"active":0,"complete":1,"success":1,"errored":0,"retried":0,"total":1,"elapsed":689}
+[debug] [2026-11-18T06:00:21.621Z] [hosting] uploads queued: 11
+[info] i  hosting: uploading new files [0/11] (0%) 
+[debug] [2026-11-18T06:00:22.930Z] <<< [apiv2][status] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files/daa07c51358df894a729751230ade19053133a24d08c167684a6152aa88f10eb 200
+[debug] [2026-11-18T06:00:22.930Z] <<< [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files/daa07c51358df894a729751230ade19053133a24d08c167684a6152aa88f10eb [stream]
+[debug] [2026-11-18T06:00:22.942Z] <<< [apiv2][status] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files/81efd2779e3c679d197b9bed302540433923794dea92d3f15123cca90638d322 200
+[debug] [2026-11-18T06:00:22.942Z] <<< [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files/81efd2779e3c679d197b9bed302540433923794dea92d3f15123cca90638d322 [stream]
+[debug] [2026-11-18T06:00:22.967Z] <<< [apiv2][status] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files/21624d4b5681d3c4a85f938515b4d8908829997c9843f9c293209c4872a22ac6 200
+[debug] [2026-11-18T06:00:22.967Z] <<< [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files/21624d4b5681d3c4a85f938515b4d8908829997c9843f9c293209c4872a22ac6 [stream]
+[debug] [2026-11-18T06:00:22.974Z] <<< [apiv2][status] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files/66f216b56c94b9915bb511a6e0cda0a3b4a4ec53c3acaff86633c59f093e3ea8 200
+[debug] [2026-11-18T06:00:22.974Z] <<< [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files/66f216b56c94b9915bb511a6e0cda0a3b4a4ec53c3acaff86633c59f093e3ea8 [stream]
+[debug] [2026-11-18T06:00:23.022Z] <<< [apiv2][status] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files/f619c0d61a44a3893524501ecfadf4607f5a696c6103b0b44d306b3bdb5440b0 200
+[debug] [2026-11-18T06:00:23.023Z] <<< [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files/f619c0d61a44a3893524501ecfadf4607f5a696c6103b0b44d306b3bdb5440b0 [stream]
+[debug] [2026-11-18T06:00:23.042Z] <<< [apiv2][status] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files/15376c910395d2049dfaf714f01635c1411b326c50d562bee79d92449ac98ee6 200
+[debug] [2026-11-18T06:00:23.042Z] <<< [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files/15376c910395d2049dfaf714f01635c1411b326c50d562bee79d92449ac98ee6 [stream]
+[debug] [2026-11-18T06:00:23.053Z] <<< [apiv2][status] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files/1c0006fbf9fe7e5851679c26cacf3acfb711559f526c846f82dc3fc852c693f4 200
+[debug] [2026-11-18T06:00:23.053Z] <<< [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files/1c0006fbf9fe7e5851679c26cacf3acfb711559f526c846f82dc3fc852c693f4 [stream]
+[debug] [2026-11-18T06:00:23.118Z] <<< [apiv2][status] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files/8b9a403a5cfd00ef190eb93921f33d25dbc42b884753472678568c8e44e92eee 200
+[debug] [2026-11-18T06:00:23.118Z] <<< [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files/8b9a403a5cfd00ef190eb93921f33d25dbc42b884753472678568c8e44e92eee [stream]
+[debug] [2026-11-18T06:00:23.185Z] <<< [apiv2][status] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files/19dcef3a0d173a7f07714d9e3a11baadc2677e17968bce7b099bb2457682d4b6 200
+[debug] [2026-11-18T06:00:23.185Z] <<< [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files/19dcef3a0d173a7f07714d9e3a11baadc2677e17968bce7b099bb2457682d4b6 [stream]
+[debug] [2026-11-18T06:00:23.240Z] <<< [apiv2][status] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files/742c4279df77574b2ec0b3a2c07c7877e5e4b9f6985e75b80b459789d3b61c71 200
+[debug] [2026-11-18T06:00:23.240Z] <<< [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files/742c4279df77574b2ec0b3a2c07c7877e5e4b9f6985e75b80b459789d3b61c71 [stream]
+[debug] [2026-11-18T06:00:23.293Z] <<< [apiv2][status] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files/82442259590ff91a02c3c110c3ba6d0dd3a524753de56997a81e163806ad43c8 200
+[debug] [2026-11-18T06:00:23.293Z] <<< [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/1a606b4bf7331fd7/files/82442259590ff91a02c3c110c3ba6d0dd3a524753de56997a81e163806ad43c8 [stream]
+[debug] [2026-11-18T06:00:23.293Z] [hosting][upload queue][FINAL] {"max":1688,"min":1327,"avg":1465,"active":0,"complete":11,"success":11,"errored":0,"retried":0,"total":11,"elapsed":1690}
+[info] i  hosting: upload complete 
+[info] +  hosting[tickr-io]: file upload complete 
+[debug] [2026-11-18T06:00:23.294Z] [hosting] deploy completed after 2397ms
+[debug] [2026-11-18T06:00:23.294Z] [
+  {
+    "config": {
+      "site": "tickr-io",
+      "public": ".",
+      "ignore": [
+        "firebase.json",
+        "firebase-debug.log",
+        "**/.*",
+        "**/.*/**",
+        ".agents/**",
+        ".claude/**",
+        "**/node_modules/**",
+        "**/package*.json",
+        "dataconnect/**",
+        "src/**",
+        "skills-lock.json"
+      ],
+      "rewrites": [
+        {
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ]
+    },
+    "version": "projects/tickr-78b4b/sites/tickr-io/versions/1a606b4bf7331fd7"
+  }
+]
+[info] i  hosting[tickr-io]: finalizing version... 
+[debug] [2026-11-18T06:00:23.295Z] Checked if tokens are valid: true, expires at: 1794983862401
+[debug] [2026-11-18T06:00:23.295Z] Checked if tokens are valid: true, expires at: 1794983862401
+[debug] [2026-11-18T06:00:23.296Z] >>> [apiv2][query] PATCH https://firebasehosting.googleapis.com/v1beta1/projects/tickr-78b4b/sites/tickr-io/versions/1a606b4bf7331fd7 updateMask=status%2Cconfig
+[debug] [2026-11-18T06:00:23.296Z] >>> [apiv2][body] PATCH https://firebasehosting.googleapis.com/v1beta1/projects/tickr-78b4b/sites/tickr-io/versions/1a606b4bf7331fd7 {"status":"FINALIZED","config":{"rewrites":[{"glob":"**","path":"/index.html"}]}}
+[debug] [2026-11-18T06:00:23.926Z] <<< [apiv2][status] PATCH https://firebasehosting.googleapis.com/v1beta1/projects/tickr-78b4b/sites/tickr-io/versions/1a606b4bf7331fd7 200
+[debug] [2026-11-18T06:00:23.926Z] <<< [apiv2][body] PATCH https://firebasehosting.googleapis.com/v1beta1/projects/tickr-78b4b/sites/tickr-io/versions/1a606b4bf7331fd7 {"name":"projects/tickr-78b4b/sites/tickr-io/versions/1a606b4bf7331fd7","status":"FINALIZED","config":{"rewrites":[{"glob":"**","path":"/index.html"}]},"labels":{"deployment-tool":"cli-firebase"},"createTime":"2026-11-18T06:00:20.548291Z","createUser":{"email":"velodripph@gmail.com"},"finalizeTime":"2026-11-18T06:00:24.085719Z","finalizeUser":{"email":"velodripph@gmail.com"}}
+[debug] [2026-11-18T06:00:23.927Z] [hosting] finalized version for tickr-io:[object Object]
+[info] +  hosting[tickr-io]: version finalized 
+[info] i  hosting[tickr-io]: releasing new version... 
+[debug] [2026-11-18T06:00:23.928Z] Checked if tokens are valid: true, expires at: 1794983862401
+[debug] [2026-11-18T06:00:23.928Z] Checked if tokens are valid: true, expires at: 1794983862401
+[debug] [2026-11-18T06:00:23.929Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/tickr-78b4b/sites/tickr-io/channels/live/releases versionName=projects%2Ftickr-78b4b%2Fsites%2Ftickr-io%2Fversions%2F1a606b4bf7331fd7
+[debug] [2026-11-18T06:00:23.929Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/tickr-78b4b/sites/tickr-io/channels/live/releases {}
+[debug] [2026-11-18T06:00:24.624Z] <<< [apiv2][status] POST https://firebasehosting.googleapis.com/v1beta1/projects/tickr-78b4b/sites/tickr-io/channels/live/releases 200
+[debug] [2026-11-18T06:00:24.625Z] <<< [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/tickr-78b4b/sites/tickr-io/channels/live/releases {"name":"projects/tickr-78b4b/sites/tickr-io/channels/live/releases/1794981624087000","version":{"name":"projects/tickr-78b4b/sites/tickr-io/versions/1a606b4bf7331fd7","status":"FINALIZED","config":{"rewrites":[{"glob":"**","path":"/index.html"}]},"labels":{"deployment-tool":"cli-firebase"},"createTime":"2026-11-18T06:00:20.548291Z","createUser":{"email":"velodripph@gmail.com","imageUrl":"https://lh3.googleusercontent.com/a/ACg8ocLratD-9QWr83RrXe2MOq1dhkGDXkXzEdXqGBo1ojZN5eMGYIs"},"finalizeTime":"2026-11-18T06:00:24.085719Z","finalizeUser":{"email":"velodripph@gmail.com","imageUrl":"https://lh3.googleusercontent.com/a/ACg8ocLratD-9QWr83RrXe2MOq1dhkGDXkXzEdXqGBo1ojZN5eMGYIs"}},"type":"DEPLOY","releaseTime":"2026-11-18T06:00:24.087Z","releaseUser":{"email":"velodripph@gmail.com","imageUrl":"https://lh3.googleusercontent.com/a/ACg8ocLratD-9QWr83RrXe2MOq1dhkGDXkXzEdXqGBo1ojZN5eMGYIs"}}
+[debug] [2026-11-18T06:00:24.625Z] [hosting] release: {"name":"projects/tickr-78b4b/sites/tickr-io/channels/live/releases/1794981624087000","version":{"name":"projects/tickr-78b4b/sites/tickr-io/versions/1a606b4bf7331fd7","status":"FINALIZED","config":{"rewrites":[{"glob":"**","path":"/index.html"}]},"labels":{"deployment-tool":"cli-firebase"},"createTime":"2026-11-18T06:00:20.548291Z","createUser":{"email":"velodripph@gmail.com","imageUrl":"https://lh3.googleusercontent.com/a/ACg8ocLratD-9QWr83RrXe2MOq1dhkGDXkXzEdXqGBo1ojZN5eMGYIs"},"finalizeTime":"2026-11-18T06:00:24.085719Z","finalizeUser":{"email":"velodripph@gmail.com","imageUrl":"https://lh3.googleusercontent.com/a/ACg8ocLratD-9QWr83RrXe2MOq1dhkGDXkXzEdXqGBo1ojZN5eMGYIs"}},"type":"DEPLOY","releaseTime":"2026-11-18T06:00:24.087Z","releaseUser":{"email":"velodripph@gmail.com","imageUrl":"https://lh3.googleusercontent.com/a/ACg8ocLratD-9QWr83RrXe2MOq1dhkGDXkXzEdXqGBo1ojZN5eMGYIs"}}
+[info] +  hosting[tickr-io]: release complete 
+[info] 
+[info] +  Deploy complete! 
+[info] 
+[info] Project Console: https://console.firebase.google.com/project/tickr-78b4b/overview
+[info] Hosting URL: https://tickr-io.web.app
