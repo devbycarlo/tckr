@@ -4,6 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Minimal Timer</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="/apple-touch-icon-152x152.png">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#143414">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta name="theme-color" content="#121212">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Tickr">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@200;400;500;600;700&display=swap" rel="stylesheet">
@@ -39,40 +51,11 @@
     .alarm-active {
       color: #ff5252;
     }
-    .timer-row {
-      display: flex;
-      align-items: stretch;
-      justify-content: center;
-      gap: clamp(0.25rem, 1vw, 0.75rem);
-    }
-    #display {
-      touch-action: pan-y;
-    }
-    .hit-zone {
-      flex: 0 0 clamp(3rem, 9vw, 6rem);
-      background: transparent;
-      border: 0;
-      padding: 0;
-      border-radius: 12px;
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-      transition: background-color 0.15s ease;
-    }
-    .hit-zone:hover { background: rgba(255, 255, 255, 0.05); }
-    .hit-zone:active { background: rgba(255, 255, 255, 0.1); }
-    .hit-zone:focus-visible { outline: 2px solid #888; outline-offset: 2px; }
-    @media (max-width: 600px) {
-      .hit-zone { display: none; }
-    }
   </style>
 </head>
 <body>
 
-  <div class="timer-row">
-    <button id="decrease" class="hit-zone" type="button" aria-label="Decrease time by 2 minutes" title="−2 min"></button>
-    <div id="display" contenteditable="true" spellcheck="false" aria-label="Timer duration MM:SS" title="Click to edit (MM:SS)">05:00</div>
-    <button id="increase" class="hit-zone" type="button" aria-label="Increase time" title="Increase (+5, +10, +20 min…)"></button>
-  </div>
+  <div id="display" contenteditable="true" spellcheck="false" aria-label="Timer duration MM:SS" title="Click to edit (MM:SS)">05:00</div>
 
   <script>
     const display = document.getElementById('display');
@@ -85,9 +68,6 @@
     let editStartText = '';
     let wakeLock = null;
     let wakeLockRequested = false;
-    let increaseStepMinutes = 5;
-    const MIN_SECONDS = 60;
-    const MAX_SECONDS = 999 * 60 + 59;
 
     function formatTime(secs) {
       const m = Math.floor(secs / 60).toString().padStart(2, '0');
@@ -217,63 +197,14 @@
 
     display.addEventListener('focus', () => {
       editing = true;
-      increaseStepMinutes = 5;
       editStartText = display.textContent;
       stopTimer();
       display.classList.remove('alarm-active');
     });
 
-    function adjustTime(deltaSeconds) {
+    display.addEventListener('touchstart', () => {
       stopTimer();
       display.classList.remove('alarm-active');
-      const next = Math.max(MIN_SECONDS, Math.min(MAX_SECONDS, remainingSeconds + deltaSeconds));
-      remainingSeconds = next;
-      durationSeconds = next;
-      display.textContent = formatTime(next);
-      applyBackground(next);
-    }
-
-    function increaseTime() {
-      const step = increaseStepMinutes * 60;
-      increaseStepMinutes = Math.min(increaseStepMinutes * 2, 1024);
-      adjustTime(step);
-    }
-
-    function decreaseTime() {
-      increaseStepMinutes = 5;
-      adjustTime(-2 * 60);
-    }
-
-    document.getElementById('increase').addEventListener('click', increaseTime);
-    document.getElementById('decrease').addEventListener('click', decreaseTime);
-
-    let touchStartX = null;
-    let horizontalSwipe = false;
-    const isMobileLayout = () => window.matchMedia('(max-width: 600px)').matches;
-
-    display.addEventListener('touchstart', (event) => {
-      stopTimer();
-      display.classList.remove('alarm-active');
-      if (!isMobileLayout()) return;
-      touchStartX = event.touches[0].clientX;
-      horizontalSwipe = false;
-    }, { passive: true });
-
-    display.addEventListener('touchmove', (event) => {
-      if (touchStartX === null) return;
-      if (Math.abs(event.touches[0].clientX - touchStartX) > 10) {
-        horizontalSwipe = true;
-        event.preventDefault();
-      }
-    }, { passive: false });
-
-    display.addEventListener('touchend', (event) => {
-      if (touchStartX === null) return;
-      const deltaX = event.changedTouches[0].clientX - touchStartX;
-      touchStartX = null;
-      if (!horizontalSwipe || Math.abs(deltaX) < 40) return;
-      if (deltaX > 0) increaseTime();
-      else decreaseTime();
     }, { passive: true });
 
     function getCaretOffset() {
@@ -365,6 +296,10 @@
 
     applyBackground(remainingSeconds);
     updateDisplay();
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+    }
   </script>
 </body>
 </html>
