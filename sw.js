@@ -1,9 +1,9 @@
-const CACHE = 'tickr-v2';
+const CACHE = 'tickr-v3';
 const SHELL = [
   '/',
   '/index.html',
-  '/favicon.svg',
-  '/site.webmanifest'
+  '/favicon.svg?v=3',
+  '/site.webmanifest?v=3'
 ];
 
 self.addEventListener('install', (event) => {
