@@ -212,3 +212,117 @@
 [info] 
 [info] Project Console: https://console.firebase.google.com/project/tickr-78b4b/overview
 [info] Hosting URL: https://tickr-io.web.app
+[debug] [2026-11-18T03:54:18.103Z] ----------------------------------------------------------------------
+[debug] [2026-11-18T03:54:18.109Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\Administrator\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only hosting --non-interactive
+[debug] [2026-11-18T03:54:18.109Z] CLI Version:   15.36.0
+[debug] [2026-11-18T03:54:18.110Z] Platform:      win32
+[debug] [2026-11-18T03:54:18.110Z] Node Version:  v24.17.0
+[debug] [2026-11-18T03:54:18.110Z] Detected Agent: unknown
+[debug] [2026-11-18T03:54:18.110Z] Time:          Wed Nov 18 2026 11:54:18 GMT+0800 (China Standard Time)
+[debug] [2026-11-18T03:54:18.110Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-11-18T03:54:20.700Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-11-18T03:54:20.700Z] > authorizing via signed-in user (velodripph@gmail.com)
+[debug] [2026-11-18T03:54:20.700Z] [iam] checking project tickr-78b4b for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2026-11-18T03:54:20.718Z] Checked if tokens are valid: true, expires at: 1794976856614
+[debug] [2026-11-18T03:54:20.718Z] Checked if tokens are valid: true, expires at: 1794976856614
+[debug] [2026-11-18T03:54:20.722Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/tickr-78b4b:testIamPermissions [none]
+[debug] [2026-11-18T03:54:20.722Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/tickr-78b4b:testIamPermissions  x-goog-user-project=tickr-78b4b
+[debug] [2026-11-18T03:54:20.722Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/tickr-78b4b:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2026-11-18T03:54:21.766Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/tickr-78b4b:testIamPermissions 200
+[debug] [2026-11-18T03:54:21.767Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/tickr-78b4b:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2026-11-18T03:54:21.771Z] Checked if tokens are valid: true, expires at: 1794976856614
+[debug] [2026-11-18T03:54:21.771Z] Checked if tokens are valid: true, expires at: 1794976856614
+[debug] [2026-11-18T03:54:21.772Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/tickr-78b4b [none]
+[debug] [2026-11-18T03:54:22.125Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/tickr-78b4b 200
+[debug] [2026-11-18T03:54:22.125Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/tickr-78b4b {"projectId":"tickr-78b4b","projectNumber":"611368633937","displayName":"Tickr","name":"projects/tickr-78b4b","resources":{"hostingSite":"tickr-78b4b"},"state":"ACTIVE","labels":{"firebase":"enabled","firebaseworkflows/environment":"production"},"etag":"1_ed7e40d9-90b7-419c-beec-acfed1262916"}
+[info] 
+[info] === Deploying to 'tickr-78b4b'...
+[info] 
+[info] i  deploying hosting 
+[debug] [2026-11-18T03:54:22.130Z] Checked if tokens are valid: true, expires at: 1794976856614
+[debug] [2026-11-18T03:54:22.130Z] Checked if tokens are valid: true, expires at: 1794976856614
+[debug] [2026-11-18T03:54:22.130Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/tickr-78b4b/sites/tickr-io [none]
+[debug] [2026-11-18T03:54:22.729Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/tickr-78b4b/sites/tickr-io 200
+[debug] [2026-11-18T03:54:22.730Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/tickr-78b4b/sites/tickr-io {"name":"projects/tickr-78b4b/sites/tickr-io","defaultUrl":"https://tickr-io.web.app","appId":"1:611368633937:web:075cecbf974b2f1df1da70","type":"USER_SITE"}
+[debug] [2026-11-18T03:54:22.733Z] Checked if tokens are valid: true, expires at: 1794976856614
+[debug] [2026-11-18T03:54:22.734Z] Checked if tokens are valid: true, expires at: 1794976856614
+[debug] [2026-11-18T03:54:22.737Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/tickr-78b4b/sites/tickr-io/versions [none]
+[debug] [2026-11-18T03:54:22.737Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/tickr-78b4b/sites/tickr-io/versions {"status":"CREATED","labels":{"deployment-tool":"cli-firebase"}}
+[debug] [2026-11-18T03:54:23.693Z] <<< [apiv2][status] POST https://firebasehosting.googleapis.com/v1beta1/projects/tickr-78b4b/sites/tickr-io/versions 200
+[debug] [2026-11-18T03:54:23.693Z] <<< [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/tickr-78b4b/sites/tickr-io/versions {"name":"projects/tickr-78b4b/sites/tickr-io/versions/bcfe926753b05cc5","status":"CREATED","config":{},"labels":{"deployment-tool":"cli-firebase"}}
+[info] i  hosting[tickr-io]: beginning deploy... 
+[info] i  hosting[tickr-io]: found 3 files in . 
+[debug] [2026-11-18T03:54:23.711Z] [hosting] uploading with 200 concurrency
+[debug] [2026-11-18T03:54:23.716Z] Checked if tokens are valid: true, expires at: 1794976856614
+[debug] [2026-11-18T03:54:23.716Z] Checked if tokens are valid: true, expires at: 1794976856614
+[debug] [2026-11-18T03:54:23.718Z] [hosting] hash cache [] stored for 3 files
+[debug] [2026-11-18T03:54:23.719Z] [hosting][hash queue][FINAL] {"max":2,"min":0,"avg":0.6666666666666666,"active":0,"complete":3,"success":3,"errored":0,"retried":0,"total":3,"elapsed":7}
+[debug] [2026-11-18T03:54:23.719Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/tickr-78b4b/sites/tickr-io/versions/bcfe926753b05cc5:populateFiles [none]
+[debug] [2026-11-18T03:54:23.719Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/tickr-78b4b/sites/tickr-io/versions/bcfe926753b05cc5:populateFiles {"files":{"/README.md":"ddd89adbe7c538d0aecdd849e661f989d49f471deaf172fc84885d2d049083f2","/LICENSE":"cdcb6cdebfd69de2b254dbeb0c061710cee1187a7cc009caa631a6181c668de4","/index.html":"93383f82326cf3f3884aa3a2232e474ad64b600058798b8535e21704a55667b7"}}
+[debug] [2026-11-18T03:54:24.469Z] <<< [apiv2][status] POST https://firebasehosting.googleapis.com/v1beta1/projects/tickr-78b4b/sites/tickr-io/versions/bcfe926753b05cc5:populateFiles 200
+[debug] [2026-11-18T03:54:24.469Z] <<< [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/tickr-78b4b/sites/tickr-io/versions/bcfe926753b05cc5:populateFiles {"uploadRequiredHashes":["93383f82326cf3f3884aa3a2232e474ad64b600058798b8535e21704a55667b7"],"uploadUrl":"https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/bcfe926753b05cc5/files"}
+[debug] [2026-11-18T03:54:24.470Z] Checked if tokens are valid: true, expires at: 1794976856614
+[debug] [2026-11-18T03:54:24.470Z] Checked if tokens are valid: true, expires at: 1794976856614
+[debug] [2026-11-18T03:54:24.470Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/bcfe926753b05cc5/files/93383f82326cf3f3884aa3a2232e474ad64b600058798b8535e21704a55667b7 [none]
+[debug] [2026-11-18T03:54:24.470Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/bcfe926753b05cc5/files/93383f82326cf3f3884aa3a2232e474ad64b600058798b8535e21704a55667b7 [stream]
+[debug] [2026-11-18T03:54:24.472Z] [hosting][populate queue][FINAL] {"max":755,"min":755,"avg":755,"active":0,"complete":1,"success":1,"errored":0,"retried":0,"total":1,"elapsed":757}
+[debug] [2026-11-18T03:54:24.473Z] [hosting] uploads queued: 1
+[info] i  hosting: uploading new files [0/1] (0%) 
+[debug] [2026-11-18T03:54:26.004Z] <<< [apiv2][status] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/bcfe926753b05cc5/files/93383f82326cf3f3884aa3a2232e474ad64b600058798b8535e21704a55667b7 200
+[debug] [2026-11-18T03:54:26.004Z] <<< [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/tickr-io/versions/bcfe926753b05cc5/files/93383f82326cf3f3884aa3a2232e474ad64b600058798b8535e21704a55667b7 [stream]
+[debug] [2026-11-18T03:54:26.005Z] [hosting][upload queue][FINAL] {"max":1534,"min":1534,"avg":1534,"active":0,"complete":1,"success":1,"errored":0,"retried":0,"total":1,"elapsed":1535}
+[info] i  hosting: upload complete 
+[info] +  hosting[tickr-io]: file upload complete 
+[debug] [2026-11-18T03:54:26.005Z] [hosting] deploy completed after 2309ms
+[debug] [2026-11-18T03:54:26.006Z] [
+  {
+    "config": {
+      "site": "tickr-io",
+      "public": ".",
+      "ignore": [
+        "firebase.json",
+        "firebase-debug.log",
+        "**/.*",
+        "**/.*/**",
+        ".agents/**",
+        ".claude/**",
+        "**/node_modules/**",
+        "**/package*.json",
+        "dataconnect/**",
+        "src/**",
+        "skills-lock.json"
+      ],
+      "rewrites": [
+        {
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ]
+    },
+    "version": "projects/tickr-78b4b/sites/tickr-io/versions/bcfe926753b05cc5"
+  }
+]
+[info] i  hosting[tickr-io]: finalizing version... 
+[debug] [2026-11-18T03:54:26.009Z] Checked if tokens are valid: true, expires at: 1794976856614
+[debug] [2026-11-18T03:54:26.009Z] Checked if tokens are valid: true, expires at: 1794976856614
+[debug] [2026-11-18T03:54:26.009Z] >>> [apiv2][query] PATCH https://firebasehosting.googleapis.com/v1beta1/projects/tickr-78b4b/sites/tickr-io/versions/bcfe926753b05cc5 updateMask=status%2Cconfig
+[debug] [2026-11-18T03:54:26.009Z] >>> [apiv2][body] PATCH https://firebasehosting.googleapis.com/v1beta1/projects/tickr-78b4b/sites/tickr-io/versions/bcfe926753b05cc5 {"status":"FINALIZED","config":{"rewrites":[{"glob":"**","path":"/index.html"}]}}
+[debug] [2026-11-18T03:54:26.602Z] <<< [apiv2][status] PATCH https://firebasehosting.googleapis.com/v1beta1/projects/tickr-78b4b/sites/tickr-io/versions/bcfe926753b05cc5 200
+[debug] [2026-11-18T03:54:26.603Z] <<< [apiv2][body] PATCH https://firebasehosting.googleapis.com/v1beta1/projects/tickr-78b4b/sites/tickr-io/versions/bcfe926753b05cc5 {"name":"projects/tickr-78b4b/sites/tickr-io/versions/bcfe926753b05cc5","status":"FINALIZED","config":{"rewrites":[{"glob":"**","path":"/index.html"}]},"labels":{"deployment-tool":"cli-firebase"},"createTime":"2026-11-18T03:54:22.420749Z","createUser":{"email":"velodripph@gmail.com"},"finalizeTime":"2026-11-18T03:54:25.833233Z","finalizeUser":{"email":"velodripph@gmail.com"}}
+[debug] [2026-11-18T03:54:26.603Z] [hosting] finalized version for tickr-io:[object Object]
+[info] +  hosting[tickr-io]: version finalized 
+[info] i  hosting[tickr-io]: releasing new version... 
+[debug] [2026-11-18T03:54:26.603Z] Checked if tokens are valid: true, expires at: 1794976856614
+[debug] [2026-11-18T03:54:26.604Z] Checked if tokens are valid: true, expires at: 1794976856614
+[debug] [2026-11-18T03:54:26.604Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/tickr-78b4b/sites/tickr-io/channels/live/releases versionName=projects%2Ftickr-78b4b%2Fsites%2Ftickr-io%2Fversions%2Fbcfe926753b05cc5
+[debug] [2026-11-18T03:54:26.604Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/tickr-78b4b/sites/tickr-io/channels/live/releases {}
+[debug] [2026-11-18T03:54:27.399Z] <<< [apiv2][status] POST https://firebasehosting.googleapis.com/v1beta1/projects/tickr-78b4b/sites/tickr-io/channels/live/releases 200
+[debug] [2026-11-18T03:54:27.399Z] <<< [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/tickr-78b4b/sites/tickr-io/channels/live/releases {"name":"projects/tickr-78b4b/sites/tickr-io/channels/live/releases/1794974065947000","version":{"name":"projects/tickr-78b4b/sites/tickr-io/versions/bcfe926753b05cc5","status":"FINALIZED","config":{"rewrites":[{"glob":"**","path":"/index.html"}]},"labels":{"deployment-tool":"cli-firebase"},"createTime":"2026-11-18T03:54:22.420749Z","createUser":{"email":"velodripph@gmail.com","imageUrl":"https://lh3.googleusercontent.com/a/ACg8ocLratD-9QWr83RrXe2MOq1dhkGDXkXzEdXqGBo1ojZN5eMGYIs"},"finalizeTime":"2026-11-18T03:54:25.833233Z","finalizeUser":{"email":"velodripph@gmail.com","imageUrl":"https://lh3.googleusercontent.com/a/ACg8ocLratD-9QWr83RrXe2MOq1dhkGDXkXzEdXqGBo1ojZN5eMGYIs"}},"type":"DEPLOY","releaseTime":"2026-11-18T03:54:25.947Z","releaseUser":{"email":"velodripph@gmail.com","imageUrl":"https://lh3.googleusercontent.com/a/ACg8ocLratD-9QWr83RrXe2MOq1dhkGDXkXzEdXqGBo1ojZN5eMGYIs"}}
+[debug] [2026-11-18T03:54:27.400Z] [hosting] release: {"name":"projects/tickr-78b4b/sites/tickr-io/channels/live/releases/1794974065947000","version":{"name":"projects/tickr-78b4b/sites/tickr-io/versions/bcfe926753b05cc5","status":"FINALIZED","config":{"rewrites":[{"glob":"**","path":"/index.html"}]},"labels":{"deployment-tool":"cli-firebase"},"createTime":"2026-11-18T03:54:22.420749Z","createUser":{"email":"velodripph@gmail.com","imageUrl":"https://lh3.googleusercontent.com/a/ACg8ocLratD-9QWr83RrXe2MOq1dhkGDXkXzEdXqGBo1ojZN5eMGYIs"},"finalizeTime":"2026-11-18T03:54:25.833233Z","finalizeUser":{"email":"velodripph@gmail.com","imageUrl":"https://lh3.googleusercontent.com/a/ACg8ocLratD-9QWr83RrXe2MOq1dhkGDXkXzEdXqGBo1ojZN5eMGYIs"}},"type":"DEPLOY","releaseTime":"2026-11-18T03:54:25.947Z","releaseUser":{"email":"velodripph@gmail.com","imageUrl":"https://lh3.googleusercontent.com/a/ACg8ocLratD-9QWr83RrXe2MOq1dhkGDXkXzEdXqGBo1ojZN5eMGYIs"}}
+[info] +  hosting[tickr-io]: release complete 
+[info] 
+[info] +  Deploy complete! 
+[info] 
+[info] Project Console: https://console.firebase.google.com/project/tickr-78b4b/overview
+[info] Hosting URL: https://tickr-io.web.app

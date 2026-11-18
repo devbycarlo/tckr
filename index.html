@@ -28,6 +28,10 @@
       cursor: text;
       outline: none;
       border-bottom: 2px solid transparent;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #display::selection {
+      background: transparent;
     }
     #display:focus {
       border-bottom-color: #444;
@@ -67,14 +71,6 @@
       const total = m * 60 + s;
       if (total < 1 || total > 999 * 60 + 59) return null;
       return total;
-    }
-
-    function selectAllText() {
-      const range = document.createRange();
-      range.selectNodeContents(display);
-      const selection = window.getSelection();
-      selection.removeAllRanges();
-      selection.addRange(range);
     }
 
     function getAudioCtx() {
@@ -166,7 +162,6 @@
       editStartText = display.textContent;
       stopTimer();
       display.classList.remove('alarm-active');
-      selectAllText();
     });
 
     display.addEventListener('touchstart', () => {
@@ -194,17 +189,18 @@
       selection.addRange(range);
     }
 
-    function ensureColon() {
-      const text = display.textContent;
-      if (text.includes(':')) return;
+    function normalizeTimeInput() {
+      const old = display.textContent;
       const caret = getCaretOffset();
-      const at = Math.min(2, text.length);
-      display.textContent = text.slice(0, at) + ':' + text.slice(at);
-      setCaretOffset(caret + (caret >= at ? 1 : 0));
+      const caretDigits = old.slice(0, caret).replace(/\D/g, '').length;
+      const digits = old.replace(/\D/g, '').slice(0, 4);
+      const next = `${digits.slice(0, 2).padStart(2, '0')}:${digits.slice(2).padStart(2, '0')}`;
+      display.textContent = next;
+      setCaretOffset(Math.min(caretDigits + (caretDigits >= 2 ? 1 : 0), next.length));
     }
 
     display.addEventListener('input', () => {
-      ensureColon();
+      normalizeTimeInput();
       const secs = parseTime(display.textContent);
       if (secs !== null) applyBackground(secs);
     });
