@@ -54,6 +54,8 @@
     let audioCtx = null;
     let editing = false;
     let editStartText = '';
+    let wakeLock = null;
+    let wakeLockRequested = false;
 
     function formatTime(secs) {
       const m = Math.floor(secs / 60).toString().padStart(2, '0');
@@ -137,11 +139,35 @@
     function stopTimer() {
       clearInterval(timerId);
       timerId = null;
+      releaseWakeLock();
+    }
+
+    async function requestWakeLock() {
+      wakeLockRequested = true;
+      if (!('wakeLock' in navigator) || wakeLock) return;
+      try {
+        wakeLock = await navigator.wakeLock.request('screen');
+        wakeLock.addEventListener('release', () => {
+          wakeLock = null;
+          if (wakeLockRequested && document.visibilityState === 'visible') requestWakeLock();
+        });
+      } catch (err) {
+        console.debug('Screen wake lock unavailable:', err);
+      }
+    }
+
+    function releaseWakeLock() {
+      wakeLockRequested = false;
+      if (!wakeLock) return;
+      const lock = wakeLock;
+      wakeLock = null;
+      lock.release().catch(() => {});
     }
 
     function startTimer() {
       if (timerId || remainingSeconds <= 0) return;
       getAudioCtx();
+      requestWakeLock();
       timerId = setInterval(() => {
         remainingSeconds--;
         updateDisplay();
@@ -248,6 +274,12 @@
 
     document.addEventListener('click', () => {
       stopTimer();
+    });
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && timerId && wakeLockRequested) {
+        requestWakeLock();
+      }
     });
 
     applyBackground(remainingSeconds);
