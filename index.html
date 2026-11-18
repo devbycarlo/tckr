@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minimal Timer</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-color: #121212;
+      color: #f0f0f0;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    #display {
+      font-size: 6rem;
+      font-weight: 200;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -2px;
+      margin-bottom: 1.5rem;
+    }
+    .controls {
+      display: flex;
+      gap: 0.75rem;
+    }
+    input, button {
+      background: #1e1e1e;
+      color: #f0f0f0;
+      border: 1px solid #333;
+      padding: 0.6rem 1.2rem;
+      font-size: 1rem;
+      border-radius: 6px;
+      outline: none;
+    }
+    input {
+      width: 4.5rem;
+      text-align: center;
+    }
+    button {
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    button:hover {
+      background: #2c2c2c;
+    }
+    .alarm-active {
+      color: #ff5252;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="display">05:00</div>
+
+  <div class="controls">
+    <input type="number" id="minutesInput" value="5" min="1" max="999" aria-label="Minutes">
+    <button id="toggleBtn">Start</button>
+    <button id="resetBtn">Reset</button>
+  </div>
+
+  <script>
+    const display = document.getElementById('display');
+    const minutesInput = document.getElementById('minutesInput');
+    const toggleBtn = document.getElementById('toggleBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    let remainingSeconds = 300;
+    let timerId = null;
+    let audioCtx = null;
+
+    function formatTime(secs) {
+      const m = Math.floor(secs / 60).toString().padStart(2, '0');
+      const s = (secs % 60).toString().padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
+    function playChime() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, audioCtx.currentTime); // A5 note
+      gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.8);
+    }
+
+    function updateDisplay() {
+      display.textContent = formatTime(remainingSeconds);
+    }
+
+    function stopTimer() {
+      clearInterval(timerId);
+      timerId = null;
+      toggleBtn.textContent = 'Start';
+    }
+
+    toggleBtn.addEventListener('click', () => {
+      if (timerId) {
+        stopTimer();
+        return;
+      }
+      if (remainingSeconds <= 0) return;
+
+      toggleBtn.textContent = 'Pause';
+      timerId = setInterval(() => {
+        remainingSeconds--;
+        updateDisplay();
+
+        if (remainingSeconds <= 0) {
+          stopTimer();
+          display.classList.add('alarm-active');
+          playChime();
+        }
+      }, 1000);
+    });
+
+    resetBtn.addEventListener('click', () => {
+      stopTimer();
+      display.classList.remove('alarm-active');
+      const mins = Math.max(1, parseInt(minutesInput.value) || 5);
+      remainingSeconds = mins * 60;
+      updateDisplay();
+    });
+
+    minutesInput.addEventListener('change', () => {
+      if (!timerId) {
+        display.classList.remove('alarm-active');
+        const mins = Math.max(1, parseInt(minutesInput.value) || 1);
+        remainingSeconds = mins * 60;
+        updateDisplay();
+      }
+    });
+  </script>
+</body>
+</html>
