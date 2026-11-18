@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Minimal Timer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@200;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     body {
       margin: 0;
@@ -13,39 +16,21 @@
       align-items: center;
       justify-content: center;
       background-color: #121212;
+      transition: background-color 0.4s ease;
       color: #f0f0f0;
-      font-family: system-ui, -apple-system, sans-serif;
+      font-family: 'Barlow Condensed', sans-serif;
     }
     #display {
-      font-size: 6rem;
+      font-size: 10rem;
       font-weight: 200;
       font-variant-numeric: tabular-nums;
       letter-spacing: -2px;
-      margin-bottom: 1.5rem;
-    }
-    .controls {
-      display: flex;
-      gap: 0.75rem;
-    }
-    input, button {
-      background: #1e1e1e;
-      color: #f0f0f0;
-      border: 1px solid #333;
-      padding: 0.6rem 1.2rem;
-      font-size: 1rem;
-      border-radius: 6px;
+      cursor: text;
       outline: none;
+      border-bottom: 2px solid transparent;
     }
-    input {
-      width: 4.5rem;
-      text-align: center;
-    }
-    button {
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-    button:hover {
-      background: #2c2c2c;
+    #display:focus {
+      border-bottom-color: #444;
     }
     .alarm-active {
       color: #ff5252;
@@ -54,23 +39,17 @@
 </head>
 <body>
 
-  <div id="display">05:00</div>
-
-  <div class="controls">
-    <input type="number" id="minutesInput" value="5" min="1" max="999" aria-label="Minutes">
-    <button id="toggleBtn">Start</button>
-    <button id="resetBtn">Reset</button>
-  </div>
+  <div id="display" contenteditable="true" spellcheck="false" aria-label="Timer duration MM:SS" title="Click to edit (MM:SS)">05:00</div>
 
   <script>
     const display = document.getElementById('display');
-    const minutesInput = document.getElementById('minutesInput');
-    const toggleBtn = document.getElementById('toggleBtn');
-    const resetBtn = document.getElementById('resetBtn');
 
     let remainingSeconds = 300;
+    let durationSeconds = 300;
     let timerId = null;
     let audioCtx = null;
+    let editing = false;
+    let editStartText = '';
 
     function formatTime(secs) {
       const m = Math.floor(secs / 60).toString().padStart(2, '0');
@@ -78,40 +57,95 @@
       return `${m}:${s}`;
     }
 
-    function playChime() {
+    function parseTime(text) {
+      const parts = text.trim().split(':');
+      if (parts.length !== 2) return null;
+      const m = parseInt(parts[0], 10);
+      const s = parseInt(parts[1], 10);
+      if (!Number.isFinite(m) || !Number.isFinite(s)) return null;
+      if (m < 0 || s < 0 || s > 59) return null;
+      const total = m * 60 + s;
+      if (total < 1 || total > 999 * 60 + 59) return null;
+      return total;
+    }
+
+    function selectAllText() {
+      const range = document.createRange();
+      range.selectNodeContents(display);
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+
+    function getAudioCtx() {
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      return audioCtx;
+    }
+
+    function playTick() {
+      const ctx = getAudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(880, audioCtx.currentTime); // A5 note
-      gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
+      osc.frequency.setValueAtTime(1200, ctx.currentTime);
+      gain.gain.setValueAtTime(0.06, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
 
       osc.connect(gain);
-      gain.connect(audioCtx.destination);
+      gain.connect(ctx.destination);
       osc.start();
-      osc.stop(audioCtx.currentTime + 0.8);
+      osc.stop(ctx.currentTime + 0.05);
+    }
+
+    function playChime() {
+      const ctx = getAudioCtx();
+      [0, 0.25, 0.5].forEach((offset, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const t = ctx.currentTime + offset;
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(i === 2 ? 1046.5 : 880, t);
+        gain.gain.setValueAtTime(0.001, t);
+        gain.gain.linearRampToValueAtTime(0.3, t + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(t);
+        osc.stop(t + 0.21);
+      });
+    }
+
+    function backgroundFor(secs) {
+      let x = Math.imul(secs + 1, 0x9e3779b1) >>> 0;
+      x ^= x >>> 16;
+      x = Math.imul(x, 0x85ebca6b) >>> 0;
+      x ^= x >>> 13;
+      const hue = secs === 0 ? 0 : x % 360;
+      const lightness = secs === 0 ? 17 : 14;
+      return `hsl(${hue}, 45%, ${lightness}%)`;
+    }
+
+    function applyBackground(secs) {
+      document.body.style.backgroundColor = backgroundFor(secs);
     }
 
     function updateDisplay() {
+      if (editing) return;
       display.textContent = formatTime(remainingSeconds);
     }
 
     function stopTimer() {
       clearInterval(timerId);
       timerId = null;
-      toggleBtn.textContent = 'Start';
     }
 
-    toggleBtn.addEventListener('click', () => {
-      if (timerId) {
-        stopTimer();
-        return;
-      }
-      if (remainingSeconds <= 0) return;
-
-      toggleBtn.textContent = 'Pause';
+    function startTimer() {
+      if (timerId || remainingSeconds <= 0) return;
+      getAudioCtx();
       timerId = setInterval(() => {
         remainingSeconds--;
         updateDisplay();
@@ -119,27 +153,75 @@
         if (remainingSeconds <= 0) {
           stopTimer();
           display.classList.add('alarm-active');
+          applyBackground(0);
           playChime();
+        } else {
+          playTick();
         }
       }, 1000);
-    });
+    }
 
-    resetBtn.addEventListener('click', () => {
+    display.addEventListener('focus', () => {
+      editing = true;
+      editStartText = display.textContent;
       stopTimer();
       display.classList.remove('alarm-active');
-      const mins = Math.max(1, parseInt(minutesInput.value) || 5);
-      remainingSeconds = mins * 60;
-      updateDisplay();
+      selectAllText();
     });
 
-    minutesInput.addEventListener('change', () => {
-      if (!timerId) {
-        display.classList.remove('alarm-active');
-        const mins = Math.max(1, parseInt(minutesInput.value) || 1);
-        remainingSeconds = mins * 60;
-        updateDisplay();
+    display.addEventListener('input', () => {
+      const secs = parseTime(display.textContent);
+      if (secs !== null) applyBackground(secs);
+    });
+
+    display.addEventListener('blur', () => {
+      editing = false;
+      const text = display.textContent.trim();
+      const secs = text === editStartText ? null : parseTime(text);
+      if (secs !== null) {
+        durationSeconds = secs;
+        remainingSeconds = secs;
+      } else if (remainingSeconds <= 0) {
+        remainingSeconds = durationSeconds > 0 ? durationSeconds : 300;
+      }
+      updateDisplay();
+      applyBackground(remainingSeconds);
+      startTimer();
+    });
+
+    display.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        display.blur();
+        startTimer();
+      } else if (event.key === 'Escape') {
+        event.preventDefault();
+        display.textContent = formatTime(remainingSeconds);
+        display.blur();
       }
     });
+
+    document.addEventListener('pointerdown', () => {
+      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.code !== 'Space' || event.repeat || document.activeElement === display) return;
+      event.preventDefault();
+      if (timerId) {
+        stopTimer();
+      } else {
+        startTimer();
+      }
+    });
+
+    document.addEventListener('click', () => {
+      stopTimer();
+    });
+
+    applyBackground(remainingSeconds);
+    updateDisplay();
+    startTimer();
   </script>
 </body>
 </html>
