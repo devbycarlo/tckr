@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Minimal Timer</title>
+  <title>Tickr - Minimal Timer</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=3">
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=3">
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=3">
@@ -225,6 +225,26 @@
       }
       #chatLog {
         max-height: 34vh;
+      }
+    }
+    body {
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-user-drag: none;
+    }
+    #display,
+    #chatInput,
+    #chatInput * {
+      -webkit-user-select: text;
+      -moz-user-select: text;
+      user-select: text;
+      -webkit-touch-callout: default;
+    }
+    @media print {
+      body {
+        display: none !important;
       }
     }
   </style>
@@ -1069,6 +1089,40 @@
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
     }
+  </script>
+  <script>
+    (function () {
+      'use strict';
+      function isEditable(el) {
+        if (!el) return false;
+        if (el.nodeType === 3) el = el.parentNode;
+        if (!el || el.nodeType !== 1) return false;
+        return Boolean(el.isContentEditable) ||
+          el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT';
+      }
+      function blockUnlessEditable(event) {
+        if (!isEditable(event.target)) event.preventDefault();
+      }
+      document.addEventListener('contextmenu', function (event) { event.preventDefault(); });
+      document.addEventListener('dragstart', function (event) { event.preventDefault(); });
+      document.addEventListener('selectstart', blockUnlessEditable);
+      document.addEventListener('copy', blockUnlessEditable);
+      document.addEventListener('cut', blockUnlessEditable);
+      document.addEventListener('paste', blockUnlessEditable);
+      document.addEventListener('keydown', function (event) {
+        var mod = event.ctrlKey || event.metaKey;
+        var key = String(event.key || '').toLowerCase();
+        if (event.key === 'F12') { event.preventDefault(); return; }
+        if (mod && event.shiftKey && ['i', 'j', 'c', 'k'].indexOf(key) !== -1) { event.preventDefault(); return; }
+        if (event.altKey && event.metaKey && ['i', 'j', 'u'].indexOf(key) !== -1) { event.preventDefault(); return; }
+        if (mod && !event.altKey) {
+          if (['u', 's', 'p'].indexOf(key) !== -1) { event.preventDefault(); return; }
+          if (['c', 'x', 'v'].indexOf(key) !== -1 && !isEditable(document.activeElement)) {
+            event.preventDefault();
+          }
+        }
+      });
+    })();
   </script>
 </body>
 </html>
