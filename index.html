@@ -124,6 +124,14 @@
     }
     .msg.user {
       color: #f0f0f0;
+      border-top: 1px solid rgba(240, 240, 240, 0.07);
+      padding-top: 0.4rem;
+      margin-top: 0.15rem;
+    }
+    .msg.user:first-child {
+      border-top: none;
+      padding-top: 0;
+      margin-top: 0;
     }
     .msg.user::before {
       content: '› ';
@@ -131,6 +139,13 @@
     }
     .msg.agent {
       color: #a5a5a5;
+      font-size: 1rem;
+      line-height: 1.45;
+    }
+    .msg[data-timer] {
+      border-top: 1px solid rgba(240, 240, 240, 0.07);
+      padding-top: 0.4rem;
+      margin-top: 0.15rem;
     }
     #chatForm {
       display: flex;
@@ -456,9 +471,11 @@
       timers.sort((a, b) => (a.startIn - b.startIn) || (b.seconds - a.seconds));
 
       for (const t of timers) {
-        let line = `⏱ ${t.label} · ${formatTime(t.seconds)}`;
-        if (t.startIn > 0) line += ` — auto-starts in ${formatTime(t.startIn)}`;
-        lines.push(line);
+        if (lines.length) lines.push('');
+        lines.push(`⏱ ${t.label}`);
+        let detail = formatTime(t.seconds);
+        if (t.startIn > 0) detail += ` — auto-starts in ${formatTime(t.startIn)}`;
+        lines.push(detail);
         if (t.tip) lines.push(`💡 ${t.tip}`);
       }
       return { timers, reply: lines.join('\n') };
@@ -577,7 +594,7 @@
         const seconds = extractDuration(data.toLowerCase());
         if (!seconds) return fail;
         const label = titleCase(cleanLabel(requestText)) || 'Timer';
-        return { timers: [{ label, seconds, startIn: 0, tip: null }], reply: '⏱ ' + label + ' · ' + formatTime(seconds) + ' — from the agent.' };
+        return { timers: [{ label, seconds, startIn: 0, tip: null }], reply: '⏱ ' + label + '\n' + formatTime(seconds) + ' — from the agent.' };
       }
       if (typeof data !== 'object') return fail;
       const items = Array.isArray(data.timers) ? data.timers : [data];
@@ -602,12 +619,15 @@
       timers.sort((a, b) => (a.startIn - b.startIn) || (b.seconds - a.seconds));
       const lines = [];
       for (const t of timers) {
-        let line = '⏱ ' + t.label + ' · ' + formatTime(t.seconds);
-        if (t.startIn > 0) line += ' — auto-starts in ' + formatTime(t.startIn);
-        lines.push(line);
+        if (lines.length) lines.push('');
+        lines.push('⏱ ' + t.label);
+        let detail = formatTime(t.seconds);
+        if (t.startIn > 0) detail += ' — auto-starts in ' + formatTime(t.startIn);
+        lines.push(detail);
         if (t.tip) lines.push('💡 ' + t.tip);
       }
       if (agentUrl) {
+        if (lines.length) lines.push('');
         lines.push('— from your external agent.');
       }
       const reply = (typeof data.reply === 'string' && data.reply.trim()) ? data.reply.trim() : lines.join('\n');
@@ -656,6 +676,47 @@
       });
     }
 
+    let alarmLoopId = null;
+
+    function playAlarmTune() {
+      const ctx = getAudioCtx();
+      const notes = [
+        { f: 1319, d: 0.16 },
+        { f: 988, d: 0.16 },
+        { f: 1319, d: 0.16 },
+        { f: 988, d: 0.16 },
+      ];
+      let t = ctx.currentTime;
+      for (const n of notes) {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(n.f, t);
+        gain.gain.setValueAtTime(0.0001, t);
+        gain.gain.exponentialRampToValueAtTime(0.2, t + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + n.d);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(t);
+        osc.stop(t + n.d);
+        t += n.d;
+      }
+    }
+
+    function startAlarmLoop() {
+      if (alarmLoopId) return;
+      playAlarmTune();
+      alarmLoopId = setInterval(playAlarmTune, 1400);
+      requestWakeLock();
+    }
+
+    function stopAlarmLoop() {
+      if (!alarmLoopId) return;
+      clearInterval(alarmLoopId);
+      alarmLoopId = null;
+      if (!timerId) releaseWakeLock();
+    }
+
     function backgroundFor(secs) {
       let x = Math.imul(secs + 1, 0x9e3779b1) >>> 0;
       x ^= x >>> 16;
@@ -679,7 +740,7 @@
     function stopTimer() {
       clearInterval(timerId);
       timerId = null;
-      releaseWakeLock();
+      if (!alarmLoopId) releaseWakeLock();
     }
 
     async function requestWakeLock() {
@@ -705,6 +766,7 @@
     }
 
     function startTimer() {
+      stopAlarmLoop();
       const chatActive = chatTimers.some((t) => t.state !== 'done');
       if (timerId || (remainingSeconds <= 0 && !chatActive)) return;
       getAudioCtx();
@@ -721,14 +783,17 @@
           // chat timer (if any) onto the main display.
           display.classList.add('alarm-active');
           applyBackground(0);
-          playChime();
           const next = chatTimers
             .filter((t) => t.state === 'running')
             .sort((a, b) => a.remaining - b.remaining)[0];
           if (next) {
+            playChime();
             promoteTimer(next);
           } else if (!chatTimers.some((t) => t.state !== 'done')) {
+            startAlarmLoop();
             stopTimer();
+          } else {
+            playChime();
           }
         } else if (remainingSeconds > 0) {
           playTick();
@@ -815,6 +880,7 @@
     });
 
     document.addEventListener('pointerdown', () => {
+      stopAlarmLoop();
       // A pointerdown while editing means the upcoming click is the gesture
       // that commits the edit (blur starts the timer); don't let that same
       // click immediately stop it again.
@@ -833,6 +899,7 @@
     });
 
     document.addEventListener('click', (event) => {
+      stopAlarmLoop();
       const target = event && event.target;
       if (target && target.closest && target.closest('#chat, #queue')) return;
       if (editCommitClick) {
@@ -841,6 +908,9 @@
       }
       stopTimer();
     });
+
+    document.addEventListener('touchstart', () => stopAlarmLoop(), { passive: true });
+    document.addEventListener('keydown', () => stopAlarmLoop());
 
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible' && timerId && wakeLockRequested) {
@@ -862,7 +932,11 @@
           t.remaining--;
           if (t.remaining <= 0) {
             t.state = 'done';
-            playChime();
+            if (remainingSeconds > 0 || chatTimers.some((x) => x.state !== 'done')) {
+              playChime();
+            } else {
+              startAlarmLoop();
+            }
           }
         }
       }
@@ -906,14 +980,49 @@
       }).join('');
     }
 
+    let latestUserEl = null;
+
+    function moveLatestUserAboveReply() {
+      if (!latestUserEl || !chatLog) return;
+      const kids = chatLog.children;
+      for (let i = 0; i < kids.length; i++) {
+        if (kids[i] === latestUserEl) {
+          chatLog.prepend(latestUserEl);
+          return;
+        }
+      }
+    }
+
+    function prependMsg(className, text) {
+      const div = document.createElement('div');
+      div.className = className;
+      div.textContent = text;
+      chatLog.prepend(div);
+      while (chatLog.children.length > 60) chatLog.removeChild(chatLog.children[chatLog.children.length - 1]);
+      chatLog.scrollTop = 0;
+      return div;
+    }
+
     function appendMsg(who, text) {
       if (!chatLog) return;
-      const div = document.createElement('div');
-      div.className = 'msg ' + who;
-      div.textContent = text;
-      chatLog.appendChild(div);
-      while (chatLog.children.length > 60) chatLog.removeChild(chatLog.children[0]);
-      chatLog.scrollTop = chatLog.scrollHeight;
+      const el = prependMsg('msg ' + who, text);
+      if (who === 'user') latestUserEl = el;
+      else moveLatestUserAboveReply();
+      return el;
+    }
+
+    function appendReply(text) {
+      if (!chatLog) return;
+      const blocks = String(text).split('\n\n').filter(Boolean);
+      let firstTimerIdx = -1;
+      for (let i = 0; i < blocks.length; i++) {
+        if (blocks[i].charCodeAt(0) === 0x23f1) { firstTimerIdx = i; break; }
+      }
+      for (let i = blocks.length - 1; i >= 0; i--) {
+        const el = prependMsg('msg agent', blocks[i]);
+        if (i !== firstTimerIdx && blocks[i].charCodeAt(0) === 0x23f1) el.setAttribute('data-timer', '');
+      }
+      moveLatestUserAboveReply();
     }
 
     function applyChatResult(result) {
@@ -940,7 +1049,7 @@
           state: t.startIn > 0 ? 'queued' : 'running',
         });
       }
-      appendMsg('agent', result.reply);
+      appendReply(result.reply);
       applyBackground(remainingSeconds);
       updateDisplay();
       renderQueue();

@@ -80,7 +80,7 @@ function buildEnv({ fixedNow = null, fetchImpl = null } = {}) {
     body: { style: {} },
     getElementById: (id) => elements[id] || null,
     createTextNode: (text) => ({ textContent: text }),
-    createElement: () => makeTarget({ textContent: '', className: '', classList: makeClassList() }),
+    createElement: () => makeTarget({ textContent: '', className: '', classList: makeClassList(), setAttribute() {} }),
   });
   display = makeTarget({
     textContent: '05:00',
@@ -100,6 +100,7 @@ function buildEnv({ fixedNow = null, fetchImpl = null } = {}) {
     scrollTop: 0,
     scrollHeight: 0,
     appendChild(node) { this.children.push(node); return node; },
+    prepend(node) { this.children = [node, ...this.children.filter((c) => c !== node)]; return node; },
     removeChild(node) { this.children = this.children.filter((c) => c !== node); },
   });
   const chatForm = makeTarget({});
@@ -630,25 +631,27 @@ test('agent command: built-in is default; set persists, status reports, off/auto
   env.submit('/agent');
   assert.match(env.agentMessages()[0], /built-in AI is on/i);
   env.submit('/agent notaurl');
-  assert.match(env.agentMessages()[1], /full http\(s\) URL/);
+  assert.match(env.agentMessages()[0], /full http\(s\) URL/);
   assert.equal(env.get('agentUrl'), '');
   env.submit('/agent https://agent.example.com/timer');
   assert.equal(env.get('agentUrl'), 'https://agent.example.com/timer');
   assert.equal(env.storage.get('tickr.agent.url'), 'https://agent.example.com/timer');
   env.submit('/agent');
-  assert.match(env.agentMessages()[3], /Custom agent connected/);
+  assert.match(env.agentMessages()[0], /Custom agent connected/);
   env.submit('/agent off');
   assert.equal(env.get('agentUrl'), '');
   assert.equal(env.get('agentDisabled'), true);
   assert.equal(env.storage.has('tickr.agent.url'), false);
   assert.equal(env.storage.get('tickr.agent.mode'), 'off');
   env.submit('/agent');
-  assert.match(env.agentMessages()[5], /lookups are off/i);
+  assert.match(env.agentMessages()[0], /lookups are off/i);
   env.submit('/agent auto');
   assert.equal(env.get('agentDisabled'), false);
   assert.equal(env.storage.has('tickr.agent.mode'), false);
   env.submit('/agent');
-  assert.match(env.agentMessages()[7], /built-in AI is on/i);
+  assert.match(env.agentMessages()[0], /built-in AI is on/i);
+  assert.strictEqual(env.agentMessages().length, 8, 'newest message is first, oldest last');
+  assert.match(env.agentMessages()[7], /built-in AI is on/i, 'oldest message stays at the bottom');
 });
 
 test('agent: local durations never hit the network', async () => {
