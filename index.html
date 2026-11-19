@@ -23,6 +23,10 @@
     body {
       margin: 0;
       height: 100vh;
+      height: 100dvh;
+      box-sizing: border-box;
+      padding: 1rem 0.75rem max(1.5rem, env(safe-area-inset-bottom));
+      overflow: hidden;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -31,9 +35,10 @@
       transition: background-color 0.4s ease;
       color: #f0f0f0;
       font-family: 'Barlow Condensed', sans-serif;
+      gap: 0.4rem;
     }
     #display {
-      font-size: clamp(8rem, min(40vw, 60vh), 24rem);
+      font-size: clamp(6rem, min(40vw, 46vh), 24rem);
       font-weight: 200;
       font-variant-numeric: tabular-nums;
       letter-spacing: -2px;
@@ -51,11 +56,132 @@
     .alarm-active {
       color: #ff5252;
     }
+    #timerLabel {
+      min-height: 1.2em;
+      font-size: 1.1rem;
+      font-weight: 500;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: #a5a5a5;
+      text-align: center;
+    }
+    #queue {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      justify-content: center;
+      max-width: min(92vw, 640px);
+    }
+    .chip {
+      font: inherit;
+      font-size: 0.95rem;
+      letter-spacing: 0.05em;
+      color: #a5a5a5;
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+    }
+    .chip:hover {
+      color: #f0f0f0;
+    }
+    #chat {
+      width: min(84vw, 560px);
+      margin-top: 1.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+    }
+    #chatLog {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      max-height: 20vh;
+      overflow-y: auto;
+      font-size: 1.1rem;
+      line-height: 1.45;
+      scrollbar-width: thin;
+      scrollbar-color: #444 transparent;
+    }
+    #chatLog::-webkit-scrollbar {
+      width: 2px;
+    }
+    #chatLog::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    #chatLog::-webkit-scrollbar-thumb {
+      background: #444;
+    }
+    #chatLog::-webkit-scrollbar-thumb:hover {
+      background: #777;
+    }
+    .msg {
+      white-space: pre-line;
+    }
+    .msg.user {
+      color: #f0f0f0;
+    }
+    .msg.user::before {
+      content: '› ';
+      color: #666;
+    }
+    .msg.agent {
+      color: #a5a5a5;
+    }
+    #chatForm {
+      display: flex;
+      align-items: baseline;
+      gap: 1rem;
+      padding: 0.25rem 1rem;
+    }
+    #chatInput {
+      flex: 1;
+      min-width: 0;
+      font: inherit;
+      font-size: 1rem;
+      color: #f0f0f0;
+      background: none;
+      border: none;
+      border-bottom: 1px solid #3a3a3a;
+      border-radius: 0;
+      padding: 0.6rem 1.25rem;
+      outline: none;
+    }
+    #chatInput::placeholder {
+      color: #8a8a8a;
+    }
+    #chatInput:focus {
+      border-bottom-color: #888;
+    }
+    #chatForm button {
+      font: inherit;
+      font-size: 0.95rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #a5a5a5;
+      background: none;
+      border: none;
+      padding: 0.6rem 0.75rem;
+      cursor: pointer;
+    }
+    #chatForm button:hover {
+      color: #f0f0f0;
+    }
   </style>
 </head>
 <body>
 
   <div id="display" contenteditable="true" spellcheck="false" aria-label="Timer duration MM:SS" title="Click to edit (MM:SS)">05:00</div>
+  <div id="timerLabel" aria-live="polite"></div>
+  <div id="queue" aria-label="Scheduled timers"></div>
+  <div id="chat">
+    <div id="chatLog" aria-live="polite"></div>
+    <form id="chatForm" autocomplete="off">
+      <input id="chatInput" type="text" enterkeyhint="send" aria-label="Describe your timers in plain words" placeholder="e.g. soft-boiled eggs · laundry in 35 minutes · chicken 45m, asparagus 12m, finish at 7pm">
+      <button type="submit">Set</button>
+    </form>
+  </div>
 
   <script>
     const display = document.getElementById('display');
@@ -69,6 +195,18 @@
     let wakeLock = null;
     let wakeLockRequested = false;
     let editCommitClick = false;
+
+    const timerLabel = document.getElementById('timerLabel');
+    const queueEl = document.getElementById('queue');
+    const chatLog = document.getElementById('chatLog');
+    const chatForm = document.getElementById('chatForm');
+    const chatInput = document.getElementById('chatInput');
+
+    // Chat-scheduled timers. The main display is the "primary" timer; these
+    // run alongside it (state: queued -> running -> done).
+    let chatTimers = [];
+    let chatSeq = 0;
+    let primaryLabel = '';
 
     function formatTime(secs) {
       const m = Math.floor(secs / 60).toString().padStart(2, '0');
@@ -88,6 +226,315 @@
       return total;
     }
 
+    // ---- Natural-language chat parser (deterministic, fully offline) ----
+    // Extracts durations, labels, cooking tips and finish-time dependencies
+    // from messy real-world sentences. No network, no API keys.
+    const KNOWN_ITEMS = [
+      { re: /soft[\s-]?boiled\s+eggs?|eggs?\s+soft[\s-]?boiled/i, label: 'Eggs', seconds: 390, tip: 'Drop into ice bath immediately.' },
+      { re: /hard[\s-]?boiled\s+eggs?|eggs?\s+hard[\s-]?boiled/i, label: 'Eggs', seconds: 720, tip: 'Ice bath makes peeling easier.' },
+      { re: /\beggs?\b/i, label: 'Eggs', seconds: 390, tip: 'Drop into ice bath immediately.' },
+      { re: /\bpasta\b|\bspaghetti\b|\bnoodles?\b/i, label: 'Pasta', seconds: 600, tip: 'Salt the water once it boils.' },
+      { re: /\brice\b/i, label: 'Rice', seconds: 900, tip: 'Rinse until the water runs clear.' },
+      { re: /\bchicken\b/i, label: 'Chicken', seconds: 2700, tip: 'Rest 5 minutes before carving.' },
+      { re: /\basparagus\b/i, label: 'Asparagus', seconds: 720, tip: 'Snap off the woody ends first.' },
+      { re: /\bsteak\b/i, label: 'Steak', seconds: 480, tip: 'Flip once, then rest before slicing.' },
+      { re: /\btea\b/i, label: 'Tea', seconds: 180, tip: 'Green tea: cooler water, shorter steep.' },
+      { re: /\bcoffee\b|\bfrench\s+press\b/i, label: 'Coffee', seconds: 240, tip: 'Bloom the grounds 30s before filling.' },
+      { re: /\blaundry\b|\bwashing\b/i, label: 'Laundry', seconds: 2100, tip: 'Shake items out before hanging.', reminder: true },
+      { re: /\bpotatoes?\b/i, label: 'Potatoes', seconds: 1200, tip: 'Start in cold, salted water.' },
+      { re: /\bbroccoli\b/i, label: 'Broccoli', seconds: 300, tip: 'Steam until just tender.' },
+      { re: /\btoast\b/i, label: 'Toast', seconds: 120 },
+      { re: /\bnap\b|\bpower\s+nap\b/i, label: 'Nap', seconds: 1200, tip: 'Keep it under 20m to avoid grogginess.' },
+      { re: /\bworkout\b|\bexercise\b/i, label: 'Workout', seconds: 1800 },
+      { re: /\bstretch(?:ing)?\b/i, label: 'Stretch', seconds: 300 },
+      { re: /\bmeditat(?:e|ion)\b/i, label: 'Meditate', seconds: 600 },
+    ];
+
+    function extractDuration(text) {
+      let seconds = 0;
+      let found = false;
+      const h = text.match(/(\d+(?:\.\d+)?)\s*(?:hours?|hrs?|hr|h)\b/i);
+      if (h) { seconds += Math.round(parseFloat(h[1]) * 3600); found = true; }
+      const m = text.match(/(\d+(?:\.\d+)?)\s*(?:minutes?|mins?|min|m)\b/i);
+      if (m) { seconds += Math.round(parseFloat(m[1]) * 60); found = true; }
+      const s = text.match(/(\d+(?:\.\d+)?)\s*(?:seconds?|secs?|sec|s)\b/i);
+      if (s) { seconds += Math.round(parseFloat(s[1])); found = true; }
+      if (!found) {
+        const clock = text.match(/\b(\d{1,3}):(\d{2})\b/);
+        if (clock) { seconds = parseInt(clock[1], 10) * 60 + parseInt(clock[2], 10); found = true; }
+      }
+      if (!found && /\bhalf\s+an?\s+hour\b/i.test(text)) { seconds = 1800; found = true; }
+      if (!found && /\ban?\s+hour\b/i.test(text)) { seconds = 3600; found = true; }
+      return found && seconds > 0 ? seconds : null;
+    }
+
+    function cleanLabel(text) {
+      return text
+        .replace(/\b(remind\s+me\s+to|remind\s+me|please|can\s+you|could\s+you|i\s+want\s+to|i\s+need\s+to|i\s+have\s+to|set|start|create|make|give\s+me|timer|countdown|alarm|for|about|around|takes?|needs?|check|the|a|an|my|some|in|at|of)\b/gi, ' ')
+        .replace(/\d+(?:\.\d+)?\s*(?:hours?|hrs?|hr|h|minutes?|mins?|min|m|seconds?|secs?|sec|s)\b/gi, ' ')
+        .replace(/\b\d{1,3}:\d{2}\b/g, ' ')
+        .replace(/[,.;!?]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    function titleCase(text) {
+      return text.replace(/\b\w/g, (c) => c.toUpperCase());
+    }
+
+    function findKnown(text) {
+      for (const item of KNOWN_ITEMS) if (item.re.test(text)) return item;
+      return null;
+    }
+
+    // A finish-by clock time ("finish at 7:00 PM", "until 3:15 PM", "done by
+    // 19:00"). Returns seconds from `now`, rolling to tomorrow when needed.
+    function parseDeadline(text, now) {
+      const m = text.match(/\b(?:finish(?:ed)?|done|ready|until|by)\s+(?:at\s+|by\s+)?(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\b/i);
+      if (!m) return null;
+      let h = parseInt(m[1], 10);
+      const min = m[2] ? parseInt(m[2], 10) : 0;
+      const ap = m[3] ? m[3].toLowerCase() : null;
+      if (h > 23 || min > 59) return null;
+      if (ap === 'pm' && h < 12) h += 12;
+      if (ap === 'am' && h === 12) h = 0;
+      if (!ap && h <= 7) h += 12; // "finish at 7" in the evening means 19:00
+      const target = new Date(now);
+      target.setHours(h, min, 0, 0);
+      if (target <= now) target.setDate(target.getDate() + 1);
+      return { seconds: Math.round((target - now) / 1000), phrase: m[0], target };
+    }
+
+    function formatClock(d) {
+      let h = d.getHours();
+      const m = d.getMinutes().toString().padStart(2, '0');
+      const ap = h >= 12 ? 'PM' : 'AM';
+      h = h % 12 || 12;
+      return `${h}:${m} ${ap}`;
+    }
+
+    function parseChat(text, now = new Date()) {
+      const raw = String(text || '').trim();
+      if (!raw) return { error: 'Type a timer request — e.g. "soft-boiled eggs" or "laundry in 35 minutes".' };
+      let body = raw.toLowerCase();
+
+      const deadline = parseDeadline(body, now);
+      if (deadline) body = body.replace(deadline.phrase, ' ');
+      body = body
+        .replace(/\b(everything|all|both|them|it|they)\b/g, ' ')
+        .replace(/\b(needs?|want|would\s+like|has|have)\s+to\b/g, ' ')
+        .replace(/\b(?:finish(?:ed)?|done|ready|simultaneously|together|at\s+the\s+same\s+time)\b/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      const segments = body
+        .split(/,|;|\band\b|\bthen\b|\bplus\b|\bwhile\b|\+|&/)
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      const timers = [];
+      for (const seg of segments) {
+        const known = findKnown(seg);
+        const explicit = extractDuration(seg);
+        // Reminder-style items ("laundry until 6 AM") mean "alert me at that
+        // time": the timer spans the whole delta, not a canned duration.
+        const seconds = explicit
+          || (deadline && known && known.reminder ? deadline.seconds : null)
+          || (known ? known.seconds : null);
+        if (!seconds) continue;
+        const label = known ? known.label : (titleCase(cleanLabel(seg)) || 'Timer');
+        timers.push({ label, seconds, startIn: 0, tip: known && known.tip ? known.tip : null });
+      }
+
+      // "until 3:15 PM" with no item named: one timer for the whole delta.
+      if (timers.length === 0 && deadline) {
+        timers.push({ label: titleCase(cleanLabel(body)) || 'Timer', seconds: deadline.seconds, startIn: 0, tip: null });
+      }
+      if (timers.length === 0) {
+        return { error: 'I couldn\'t find a duration. Try "eggs", "pasta 10 minutes", or "timer until 3:15 PM".' };
+      }
+
+      const lines = [];
+      if (deadline) {
+        const delta = deadline.seconds;
+        const rollsOver = deadline.target.getDate() !== now.getDate()
+          || deadline.target.getMonth() !== now.getMonth()
+          || deadline.target.getFullYear() !== now.getFullYear();
+        const when = formatClock(deadline.target) + (rollsOver ? ' tomorrow' : '');
+        let late = false;
+        for (const t of timers) {
+          t.startIn = Math.max(0, delta - t.seconds);
+          if (t.seconds > delta) late = true;
+        }
+        if (late) {
+          lines.push(`Heads up: starting everything now — some timers won't make the deadline (${when}).`);
+        } else {
+          lines.push(`All set to finish together at ${when}.`);
+        }
+      }
+
+      // Longest first; staggered starts in chronological order.
+      timers.sort((a, b) => (a.startIn - b.startIn) || (b.seconds - a.seconds));
+
+      for (const t of timers) {
+        let line = `⏱ ${t.label} · ${formatTime(t.seconds)}`;
+        if (t.startIn > 0) line += ` — auto-starts in ${formatTime(t.startIn)}`;
+        lines.push(line);
+        if (t.tip) lines.push(`💡 ${t.tip}`);
+      }
+      return { timers, reply: lines.join('\n') };
+    }
+
+    // External agent fallback (webhook / URL trigger): when the local parser
+    // finds no duration for a typed request, POST the exact request to a
+    // connected agent endpoint and use the duration it returns. Connect with
+    // "/agent <url>", disconnect with "/agent off". The endpoint must answer
+    // synchronously with JSON — {"label":"Brisket","duration":"12 minutes"},
+    // {"seconds":720}, {"timers":[…]} or plain text; MCP-style tool results
+    // ({content:[{type:"text",text:"…"}]}) are understood too.
+    // Built-in AI: keyless, CORS-enabled, no webhook to configure.
+    // Two independent keyless providers — a rate limit on one fails over to the other.
+    const BUILTIN_AGENT_URL = 'https://text.pollinations.ai/openai';
+    const BUILTIN_AGENT_MODEL = 'openai';
+    const BUILTIN_AGENTS = [
+      { url: BUILTIN_AGENT_URL, model: BUILTIN_AGENT_MODEL },
+      { url: 'https://api.apillmfree.com/v1/chat/completions', model: 'free-ai' },
+    ];
+    const BUILTIN_AGENT_PROMPT =
+      'You set the duration for a countdown timer app. Reply with ONE JSON object and nothing else, no markdown: ' +
+      '{"label":"<short title>","seconds":<positive whole seconds>,"tip":"<optional short useful tip>"}. ' +
+      'Estimate a sensible duration from common knowledge (cooking, brewing, study, rest, etc.). ' +
+      'seconds must be between 1 and 86400. If you genuinely cannot estimate, reply {"error":"unknown"}.';
+    const AGENT_URL_KEY = 'tickr.agent.url';
+    const AGENT_MODE_KEY = 'tickr.agent.mode';
+    const AGENT_CACHE_KEY = 'tickr.agent.cache.v1';
+    const AGENT_CACHE_MAX = 100;
+    const AGENT_COOLDOWN_MS = 60000;
+    const AGENT_TIMEOUT_MS = 15000;
+    const BUILTIN_TIMEOUT_MS = 20000;
+    const agentStore = (typeof localStorage !== 'undefined') ? localStorage : null;
+    let agentUrl = (agentStore && agentStore.getItem(AGENT_URL_KEY)) || '';
+    let agentDisabled = (agentStore && agentStore.getItem(AGENT_MODE_KEY)) === 'off';
+    let agentRequestId = 0;
+    const agentCooldown = Object.create(null);
+    let agentCache = {};
+    try {
+      agentCache = JSON.parse((agentStore && agentStore.getItem(AGENT_CACHE_KEY)) || '{}') || {};
+      if (typeof agentCache !== 'object' || Array.isArray(agentCache)) agentCache = {};
+    } catch (e) {
+      agentCache = {};
+    }
+
+    function agentCacheKey(text) {
+      return String(text).trim().toLowerCase().replace(/\s+/g, ' ');
+    }
+    function agentCacheGet(text) {
+      const hit = agentCache[agentCacheKey(text)];
+      return typeof hit === 'string' ? hit : null;
+    }
+    function agentCachePut(text, raw) {
+      agentCache[agentCacheKey(text)] = raw;
+      const keys = Object.keys(agentCache);
+      if (keys.length > AGENT_CACHE_MAX) {
+        for (const k of keys.slice(0, keys.length - AGENT_CACHE_MAX)) delete agentCache[k];
+      }
+      if (agentStore) {
+        try { agentStore.setItem(AGENT_CACHE_KEY, JSON.stringify(agentCache)); } catch (e) { /* private mode */ }
+      }
+    }
+    function agentProviderCooling(url) {
+      const until = agentCooldown[url] || 0;
+      if (Date.now() < until) return true;
+      delete agentCooldown[url];
+      return false;
+    }
+
+    function parseAgentCommand(text) {
+      const m = String(text).trim().match(/^\/agent(?:\s+(.*))?$/i);
+      if (!m) return null;
+      const arg = (m[1] || '').trim();
+      if (!arg) return { status: true };
+      if (/^(off|none|disable|disabled)$/i.test(arg)) return { off: true };
+      if (/^(auto|builtin|built-in|default|on|enable)$/i.test(arg)) return { auto: true };
+      if (!/^https?:\/\/\S+$/i.test(arg)) return { error: 'Give me a full http(s) URL — e.g. /agent https://my-agent.example.com/timer' };
+      return { setUrl: arg };
+    }
+
+    function agentStatusText() {
+      if (agentDisabled) {
+        return 'Agent lookups are off. Send "/agent auto" to use the built-in AI again (no setup needed).';
+      }
+      if (agentUrl) {
+        return 'Custom agent connected: ' + agentUrl + ' — I\'ll ask it whenever I can\'t find a duration locally. Send "/agent auto" to use the built-in AI, or "/agent off" to turn lookups off.';
+      }
+      return 'Built-in AI is on — no setup needed. When I can\'t find a duration I\'ll ask it and start the timer from its answer. Send "/agent <webhook URL>" to use your own agent, or "/agent off" to turn lookups off.';
+    }
+
+    // Normalize an agent reply into parseChat's { timers, reply } shape.
+    function normalizeAgentReply(data, requestText) {
+      const fail = { error: 'The agent didn\'t return a usable duration.' };
+      if (data == null) return fail;
+      if (typeof data === 'string') {
+        const s = data.trim();
+        let parsed = null;
+        try { parsed = JSON.parse(s); } catch (e) { /* maybe fenced or plain text */ }
+        if (parsed == null) {
+          const match = s.match(/\{[\s\S]*\}/); // LLMs often wrap JSON in prose or code fences
+          if (match) { try { parsed = JSON.parse(match[0]); } catch (e) { /* plain text */ } }
+        }
+        if (parsed && typeof parsed === 'object') data = parsed;
+      }
+      if (data && typeof data === 'object' && data.result && typeof data.result === 'object') data = data.result;
+      if (data && typeof data === 'object' && Array.isArray(data.content)) {
+        const txt = data.content.filter((c) => c && c.type === 'text').map((c) => c.text).join('\n');
+        if (txt) return normalizeAgentReply(txt, requestText);
+      }
+      // OpenAI-style chat completions — the shape returned by the built-in AI service.
+      if (data && typeof data === 'object' && Array.isArray(data.choices) &&
+          data.choices[0] && data.choices[0].message && typeof data.choices[0].message.content === 'string') {
+        return normalizeAgentReply(data.choices[0].message.content, requestText);
+      }
+      if (typeof data === 'string') {
+        const seconds = extractDuration(data.toLowerCase());
+        if (!seconds) return fail;
+        const label = titleCase(cleanLabel(requestText)) || 'Timer';
+        return { timers: [{ label, seconds, startIn: 0, tip: null }], reply: '⏱ ' + label + ' · ' + formatTime(seconds) + ' — from the agent.' };
+      }
+      if (typeof data !== 'object') return fail;
+      const items = Array.isArray(data.timers) ? data.timers : [data];
+      const timers = [];
+      for (const item of items) {
+        if (!item || typeof item !== 'object') continue;
+        let seconds = Number(item.seconds != null ? item.seconds : item.duration_seconds);
+        if (!Number.isFinite(seconds) && item.duration != null) {
+          seconds = typeof item.duration === 'number' ? item.duration : extractDuration(String(item.duration).toLowerCase());
+        }
+        seconds = Math.round(seconds);
+        if (!Number.isFinite(seconds) || seconds <= 0 || seconds > 86400) continue;
+        const label = titleCase(cleanLabel(String(item.label || item.name || requestText))) || 'Timer';
+        let startIn = Math.round(Number(item.startIn != null ? item.startIn : item.start_in)) || 0;
+        if (startIn < 0) startIn = 0;
+        timers.push({ label, seconds, startIn, tip: item.tip ? String(item.tip) : null });
+      }
+      if (!timers.length) {
+        if (typeof data.reply === 'string') return normalizeAgentReply(data.reply, requestText);
+        return fail;
+      }
+      timers.sort((a, b) => (a.startIn - b.startIn) || (b.seconds - a.seconds));
+      const lines = [];
+      for (const t of timers) {
+        let line = '⏱ ' + t.label + ' · ' + formatTime(t.seconds);
+        if (t.startIn > 0) line += ' — auto-starts in ' + formatTime(t.startIn);
+        lines.push(line);
+        if (t.tip) lines.push('💡 ' + t.tip);
+      }
+      if (agentUrl) {
+        lines.push('— from your external agent.');
+      }
+      const reply = (typeof data.reply === 'string' && data.reply.trim()) ? data.reply.trim() : lines.join('\n');
+      return { timers, reply };
+    }
+
     function getAudioCtx() {
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -100,8 +547,8 @@
       const gain = ctx.createGain();
 
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(1200, ctx.currentTime);
-      gain.gain.setValueAtTime(0.06, ctx.currentTime);
+      osc.frequency.setValueAtTime(1800, ctx.currentTime);
+      gain.gain.setValueAtTime(0.25, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
 
       osc.connect(gain);
@@ -118,9 +565,9 @@
         const t = ctx.currentTime + offset;
 
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(i === 2 ? 1046.5 : 880, t);
+        osc.frequency.setValueAtTime(i === 2 ? 1568 : 1320, t);
         gain.gain.setValueAtTime(0.001, t);
-        gain.gain.linearRampToValueAtTime(0.3, t + 0.01);
+        gain.gain.linearRampToValueAtTime(0.6, t + 0.01);
         gain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
 
         osc.connect(gain);
@@ -145,6 +592,7 @@
     }
 
     function updateDisplay() {
+      if (timerLabel) timerLabel.textContent = primaryLabel;
       if (editing) return;
       display.textContent = formatTime(remainingSeconds);
     }
@@ -178,20 +626,36 @@
     }
 
     function startTimer() {
-      if (timerId || remainingSeconds <= 0) return;
+      const chatActive = chatTimers.some((t) => t.state !== 'done');
+      if (timerId || (remainingSeconds <= 0 && !chatActive)) return;
       getAudioCtx();
       requestWakeLock();
       timerId = setInterval(() => {
-        remainingSeconds--;
+        const wasRunning = remainingSeconds > 0;
+        if (wasRunning) remainingSeconds--;
+        advanceChatTimers();
         updateDisplay();
+        renderQueue();
 
-        if (remainingSeconds <= 0) {
-          stopTimer();
+        if (wasRunning && remainingSeconds <= 0) {
+          // Primary just finished: alarm, then promote the next running
+          // chat timer (if any) onto the main display.
           display.classList.add('alarm-active');
           applyBackground(0);
           playChime();
-        } else {
+          const next = chatTimers
+            .filter((t) => t.state === 'running')
+            .sort((a, b) => a.remaining - b.remaining)[0];
+          if (next) {
+            promoteTimer(next);
+          } else if (!chatTimers.some((t) => t.state !== 'done')) {
+            stopTimer();
+          }
+        } else if (remainingSeconds > 0) {
           playTick();
+        } else if (!chatTimers.some((t) => t.state !== 'done')) {
+          // Waiting on queued timers, but nothing is left to wait for.
+          stopTimer();
         }
       }, 1000);
     }
@@ -280,7 +744,7 @@
     });
 
     document.addEventListener('keydown', (event) => {
-      if (event.code !== 'Space' || event.repeat || document.activeElement === display) return;
+      if (event.code !== 'Space' || event.repeat || document.activeElement === display || document.activeElement === chatInput) return;
       event.preventDefault();
       if (timerId) {
         stopTimer();
@@ -289,7 +753,9 @@
       }
     });
 
-    document.addEventListener('click', () => {
+    document.addEventListener('click', (event) => {
+      const target = event && event.target;
+      if (target && target.closest && target.closest('#chat, #queue')) return;
       if (editCommitClick) {
         editCommitClick = false;
         return;
@@ -301,6 +767,241 @@
       if (document.visibilityState === 'visible' && timerId && wakeLockRequested) {
         requestWakeLock();
       }
+    });
+
+    // ---- Chat timer engine ----
+    function advanceChatTimers() {
+      for (const t of [...chatTimers]) {
+        if (t.state === 'queued') {
+          t.delay--;
+          if (t.delay <= 0) {
+            t.state = 'running';
+            // Display is idle: put the freshly started timer on it.
+            if (remainingSeconds <= 0 && !editing) promoteTimer(t);
+          }
+        } else if (t.state === 'running') {
+          t.remaining--;
+          if (t.remaining <= 0) {
+            t.state = 'done';
+            playChime();
+          }
+        }
+      }
+    }
+
+    // Move a chat timer onto the main display. Whatever was on the display
+    // (if still counting) goes back into the queue as a running chip.
+    function promoteTimer(t) {
+      chatTimers = chatTimers.filter((x) => x !== t);
+      if (remainingSeconds > 0) {
+        chatTimers.push({
+          id: chatSeq++,
+          label: primaryLabel || 'Timer',
+          total: durationSeconds,
+          remaining: remainingSeconds,
+          delay: 0,
+          state: 'running',
+        });
+      }
+      primaryLabel = t.label;
+      durationSeconds = t.total;
+      remainingSeconds = t.remaining;
+      display.classList.remove('alarm-active');
+      applyBackground(remainingSeconds);
+      updateDisplay();
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    function renderQueue() {
+      if (!queueEl) return;
+      queueEl.innerHTML = chatTimers.map((t) => {
+        const status = t.state === 'queued'
+          ? 'starts in ' + formatTime(Math.max(0, t.delay))
+          : t.state === 'running'
+            ? formatTime(t.remaining)
+            : 'done ✓';
+        return '<button type="button" class="chip" data-id="' + t.id + '">' + escapeHtml(t.label) + ' · ' + status + '</button>';
+      }).join('');
+    }
+
+    function appendMsg(who, text) {
+      if (!chatLog) return;
+      const div = document.createElement('div');
+      div.className = 'msg ' + who;
+      div.textContent = text;
+      chatLog.appendChild(div);
+      while (chatLog.children.length > 60) chatLog.removeChild(chatLog.children[0]);
+      chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    function applyChatResult(result) {
+      stopTimer();
+      chatTimers = [];
+      display.classList.remove('alarm-active');
+      const [first, ...rest] = result.timers;
+      primaryLabel = first.label;
+      durationSeconds = first.seconds;
+      if (first.startIn > 0) {
+        // Longest timer can't start yet — wait, then auto-promote it.
+        remainingSeconds = 0;
+        chatTimers.push({ id: chatSeq++, label: first.label, total: first.seconds, remaining: first.seconds, delay: first.startIn, state: 'queued' });
+      } else {
+        remainingSeconds = first.seconds;
+      }
+      for (const t of rest) {
+        chatTimers.push({
+          id: chatSeq++,
+          label: t.label,
+          total: t.seconds,
+          remaining: t.seconds,
+          delay: t.startIn,
+          state: t.startIn > 0 ? 'queued' : 'running',
+        });
+      }
+      appendMsg('agent', result.reply);
+      applyBackground(remainingSeconds);
+      updateDisplay();
+      renderQueue();
+      startTimer();
+    }
+
+    async function askAgent(text, requestId) {
+      const builtin = !agentUrl;
+      const who = builtin ? 'built-in AI' : 'external agent';
+      // Duration lookup runs in the background: no "no duration found" bubble.
+      // Only the result (or a failure) is surfaced in the chat.
+
+      // Cached answers avoid burning the free-tier allowance on repeat requests.
+      const cached = builtin ? agentCacheGet(text) : null;
+      if (cached) {
+        const hit = normalizeAgentReply(cached, text);
+        if (!hit.error) { applyChatResult(hit); return; }
+      }
+
+      let providers = builtin
+        ? BUILTIN_AGENTS.filter((p) => !agentProviderCooling(p.url))
+        : [{ url: agentUrl, model: null }];
+      // If every provider is cooling, retry them rather than leaving a dead end.
+      if (builtin && !providers.length) {
+        for (const p of BUILTIN_AGENTS) delete agentCooldown[p.url];
+        providers = BUILTIN_AGENTS.slice();
+      }
+
+      let lastStatus = 0;
+      let timedOut = false;
+      let lastReplyError = '';
+      for (const provider of providers) {
+        try {
+          const controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+          const timeoutMs = builtin ? BUILTIN_TIMEOUT_MS : AGENT_TIMEOUT_MS;
+          const timeout = (controller && typeof setTimeout === 'function') ? setTimeout(() => controller.abort(), timeoutMs) : null;
+          const res = await fetch(provider.url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: builtin
+              ? JSON.stringify({ model: provider.model, stream: false, messages: [
+                  { role: 'system', content: BUILTIN_AGENT_PROMPT },
+                  { role: 'user', content: text },
+                ] })
+              : JSON.stringify({ app: 'tickr', request: text }),
+            signal: controller ? controller.signal : undefined,
+          });
+          if (timeout != null) clearTimeout(timeout);
+          if (!res.ok) {
+            lastStatus = res.status;
+            // Rate-limited providers are skipped for a minute; the next one answers now.
+            if (builtin && (res.status === 402 || res.status === 429)) agentCooldown[provider.url] = Date.now() + AGENT_COOLDOWN_MS;
+            continue;
+          }
+          const data = await res.text();
+          if (requestId !== agentRequestId) return; // a newer command replaced this request
+          const result = normalizeAgentReply(data, text);
+          if (result.error) { lastReplyError = result.error; continue; }
+          if (builtin) agentCachePut(text, data);
+          applyChatResult(result);
+          return;
+        } catch (err) {
+          if (requestId !== agentRequestId) return;
+          if (err && err.name === 'AbortError') timedOut = true;
+        }
+      }
+      if (requestId !== agentRequestId) return;
+      if (!builtin) {
+        // Custom webhook: keep the old explicit failure wording.
+        if (lastReplyError) {
+          appendMsg('agent', lastReplyError + ' Try adding a time, e.g. "' + text + ' 10 minutes".');
+          return;
+        }
+        const why = timedOut ? 'timed out' : 'didn\'t answer';
+        appendMsg('agent', 'I couldn\'t find a duration and the ' + who + ' ' + why + '. Try again or add a time, e.g. "' + text + ' 10 minutes".');
+        return;
+      }
+      appendMsg('agent', 'I couldn\'t confirm a duration for "' + text + '" with the built-in AI right now (status ' + (lastStatus || (timedOut ? 'timeout' : 'offline')) + '). Add a time, e.g. "' + text + ' 10 minutes".');
+    }
+
+    function handleChatSubmit(event) {
+      if (event && event.preventDefault) event.preventDefault();
+      const text = (chatInput.value || '').trim();
+      if (!text) return;
+      appendMsg('user', text);
+      chatInput.value = '';
+      agentRequestId += 1;
+      const requestId = agentRequestId;
+
+      const cmd = parseAgentCommand(text);
+      if (cmd) {
+        if (cmd.setUrl) {
+          agentUrl = cmd.setUrl;
+          agentDisabled = false;
+          if (agentStore) {
+            agentStore.setItem(AGENT_URL_KEY, agentUrl);
+            agentStore.removeItem(AGENT_MODE_KEY);
+          }
+        } else if (cmd.off) {
+          agentUrl = '';
+          agentDisabled = true;
+          if (agentStore) {
+            agentStore.removeItem(AGENT_URL_KEY);
+            agentStore.setItem(AGENT_MODE_KEY, 'off');
+          }
+        } else if (cmd.auto) {
+          agentUrl = '';
+          agentDisabled = false;
+          if (agentStore) {
+            agentStore.removeItem(AGENT_URL_KEY);
+            agentStore.removeItem(AGENT_MODE_KEY);
+          }
+        }
+        appendMsg('agent', cmd.error || agentStatusText());
+        return;
+      }
+
+      const result = parseChat(text, new Date());
+      if (result.error) {
+        if (!agentDisabled && typeof fetch === 'function') askAgent(text, requestId);
+        else appendMsg('agent', result.error);
+        return;
+      }
+      applyChatResult(result);
+    }
+
+    if (chatForm) chatForm.addEventListener('submit', handleChatSubmit);
+
+    // The example suggestions are launch-only: drop them for good as soon as
+    // the user types, so they don't reappear after each submit clears the box.
+    if (chatInput) chatInput.addEventListener('input', () => { chatInput.placeholder = ''; }, { once: true });
+
+    if (queueEl) queueEl.addEventListener('click', (event) => {
+      const chip = event.target && event.target.closest && event.target.closest('.chip');
+      if (!chip) return;
+      event.stopPropagation();
+      const t = chatTimers.find((x) => String(x.id) === String(chip.dataset.id));
+      if (!t || t.state !== 'running') return;
+      promoteTimer(t);
+      renderQueue();
     });
 
     applyBackground(remainingSeconds);

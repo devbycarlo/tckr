@@ -11,9 +11,10 @@
       ".claude/**",
       "**/node_modules/**",
       "**/package*.json",
-      "dataconnect/**",
-      "src/**",
-      "skills-lock.json"
+      "skills-lock.json",
+      "README.md",
+      "LICENSE",
+      "tests/**"
     ],
     "rewrites": [
       { "source": "**", "destination": "/index.html" }
@@ -44,13 +45,5 @@
         ]
       }
     ]
-  },
-  "emulators": {
-    "dataconnect": {
-      "dataDir": "dataconnect/.dataconnect/pgliteData"
-    }
-  },
-  "dataconnect": {
-    "source": "dataconnect"
   }
 }

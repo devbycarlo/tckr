@@ -1,6 +1,10 @@
 {
-  "dependencies": {
-    "@dataconnect/generated": "file:src/dataconnect-generated",
-    "firebase": "^13.4.0"
+  "name": "tickr",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Minimal full-screen countdown timer PWA (static site, no build step).",
+  "license": "GPL-3.0-only",
+  "scripts": {
+    "test": "node --test"
   }
 }

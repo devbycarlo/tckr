@@ -1,1 +1,6 @@
 node_modules
+
+# Firebase CLI local state (regenerated on every deploy)
+.firebase/
+firebase-debug.log
+*.log

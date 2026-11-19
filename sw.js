@@ -1,4 +1,4 @@
-const CACHE = 'tickr-v3';
+const CACHE = 'tickr-v6';
 const SHELL = [
   '/',
   '/index.html',
