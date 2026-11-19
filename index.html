@@ -66,8 +66,8 @@
       text-align: center;
     }
     #queue {
-      display: flex;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
       gap: 0.4rem;
       justify-content: center;
       max-width: min(92vw, 640px);
@@ -86,22 +86,25 @@
       color: #f0f0f0;
     }
     #chat {
-      width: min(84vw, 560px);
-      margin-top: 1.75rem;
+      width: min(92vw, 620px);
+      margin-top: 1.5rem;
+      flex: 1;
       display: flex;
       flex-direction: column;
       gap: 0.9rem;
+      padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
     }
     #chatLog {
       display: flex;
       flex-direction: column;
-      gap: 0.3rem;
-      max-height: 20vh;
+      gap: 0.35rem;
+      max-height: 26vh;
       overflow-y: auto;
-      font-size: 1.1rem;
-      line-height: 1.45;
+      font-size: 1.2rem;
+      line-height: 1.5;
       scrollbar-width: thin;
       scrollbar-color: #444 transparent;
+      padding: 0 0.25rem;
     }
     #chatLog::-webkit-scrollbar {
       width: 2px;
@@ -117,6 +120,7 @@
     }
     .msg {
       white-space: pre-line;
+      word-break: break-word;
     }
     .msg.user {
       color: #f0f0f0;
@@ -130,22 +134,24 @@
     }
     #chatForm {
       display: flex;
-      align-items: baseline;
-      gap: 1rem;
-      padding: 0.25rem 1rem;
+      align-items: stretch;
+      gap: 0.5rem;
+      padding: 0.25rem 0.5rem;
     }
     #chatInput {
       flex: 1;
       min-width: 0;
+      min-height: 46px;
       font: inherit;
-      font-size: 1rem;
+      font-size: 1.15rem;
       color: #f0f0f0;
       background: none;
       border: none;
-      border-bottom: 1px solid #3a3a3a;
+      border-bottom: 2px solid #3a3a3a;
       border-radius: 0;
-      padding: 0.6rem 1.25rem;
+      padding: 0.5rem 0.75rem;
       outline: none;
+      touch-action: manipulation;
     }
     #chatInput::placeholder {
       color: #8a8a8a;
@@ -154,19 +160,32 @@
       border-bottom-color: #888;
     }
     #chatForm button {
+      flex-shrink: 0;
+      min-width: 46px;
       font: inherit;
-      font-size: 0.95rem;
-      font-weight: 500;
+      font-size: 1.05rem;
+      font-weight: 600;
       letter-spacing: 0.12em;
       text-transform: uppercase;
       color: #a5a5a5;
       background: none;
       border: none;
-      padding: 0.6rem 0.75rem;
+      padding: 0.5rem 0.9rem;
       cursor: pointer;
+      touch-action: manipulation;
     }
     #chatForm button:hover {
       color: #f0f0f0;
+    }
+    @media (orientation: landscape) {
+      #queue {
+        max-width: none;
+        width: 100%;
+      }
+      #chat {
+        max-width: none;
+        width: 100%;
+      }
     }
   </style>
 </head>
