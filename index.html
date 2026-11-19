@@ -68,6 +68,7 @@
     let editStartText = '';
     let wakeLock = null;
     let wakeLockRequested = false;
+    let editCommitClick = false;
 
     function formatTime(secs) {
       const m = Math.floor(secs / 60).toString().padStart(2, '0');
@@ -271,6 +272,10 @@
     });
 
     document.addEventListener('pointerdown', () => {
+      // A pointerdown while editing means the upcoming click is the gesture
+      // that commits the edit (blur starts the timer); don't let that same
+      // click immediately stop it again.
+      editCommitClick = editing;
       if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
     });
 
@@ -285,6 +290,10 @@
     });
 
     document.addEventListener('click', () => {
+      if (editCommitClick) {
+        editCommitClick = false;
+        return;
+      }
       stopTimer();
     });
 
