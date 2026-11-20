@@ -86,13 +86,13 @@
       color: #f0f0f0;
     }
     #chat {
-      width: min(92vw, 620px);
+      width: min(88vw, 620px);
       margin-top: 1.5rem;
       flex: 0 0 auto;
       display: flex;
       flex-direction: column;
       gap: 0.9rem;
-      padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+      padding: 0 1.5rem calc(0.75rem + env(safe-area-inset-bottom));
     }
     #chatLog {
       display: flex;
@@ -151,7 +151,8 @@
       display: flex;
       align-items: stretch;
       gap: 0.5rem;
-      padding: 0.25rem 0.5rem;
+      padding: 0.25rem 1.25rem;
+      margin: 0 0.5rem;
     }
     #chatInput {
       flex: 1;
@@ -162,16 +163,17 @@
       color: #f0f0f0;
       background: none;
       border: none;
-      border-bottom: 2px solid #3a3a3a;
+      border-bottom: 2px solid transparent;
       border-radius: 0;
-      padding: 0.5rem 0.75rem;
+      padding: 0.5rem 1rem;
       outline: none;
       touch-action: manipulation;
     }
     #chatInput::placeholder {
       color: #8a8a8a;
     }
-    #chatInput:focus {
+    #chatInput:focus,
+    #chatInput:not(:placeholder-shown) {
       border-bottom-color: #888;
     }
     #chatForm button {
@@ -272,7 +274,7 @@
   <div id="chat">
     <div id="chatLog" aria-live="polite"></div>
     <form id="chatForm" autocomplete="off">
-      <input id="chatInput" type="text" enterkeyhint="send" aria-label="Describe your timers in plain words" placeholder="e.g. soft-boiled eggs · laundry in 35 minutes · chicken 45m, asparagus 12m, finish at 7pm">
+      <input id="chatInput" type="text" enterkeyhint="send" aria-label="Describe your timers in plain words" placeholder="Search timer here: e.g. soft-boiled eggs · laundry in 35 minutes · chicken 45m, asparagus 12m, finish at 7pm">
       <button type="submit">Set</button>
     </form>
   </div>
