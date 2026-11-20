@@ -379,6 +379,7 @@
     }
 
     function findKnown(text) {
+      for (const item of learnedItems) if (item.re.test(text)) return item;
       for (const item of KNOWN_ITEMS) if (item.re.test(text)) return item;
       return null;
     }
@@ -439,6 +440,7 @@
           || (known ? known.seconds : null);
         if (!seconds) continue;
         const label = known ? known.label : (titleCase(cleanLabel(seg)) || 'Timer');
+        if (explicit && label && label !== 'Timer') learnDuration(label, explicit);
         timers.push({ label, seconds, startIn: 0, tip: known && known.tip ? known.tip : null });
       }
 
@@ -545,6 +547,41 @@
       if (Date.now() < until) return true;
       delete agentCooldown[url];
       return false;
+    }
+
+    // ---- Learned durations: remember explicit durations typed by the user ----
+    // so a later bare request ("eggs") can reuse the duration they taught.
+    const LEARNED_KEY = 'tickr.learned.v1';
+    const learnedStore = agentStore;
+    let learnedDurations = {};
+    let learnedItems = [];
+    function rebuildLearnedItems() {
+      learnedItems = Object.keys(learnedDurations).map((label) => {
+        const seconds = learnedDurations[label];
+        const re = new RegExp('\\b' + String(label).replace(/[.*+?^${}()|[\\]\\\\]/g, '\\$&') + '\\b', 'i');
+        return { re, label: titleCase(label), seconds, tip: null, learned: true };
+      });
+    }
+    try {
+      const raw = learnedStore && learnedStore.getItem(LEARNED_KEY);
+      const obj = raw ? JSON.parse(raw) : {};
+      if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
+        learnedDurations = obj;
+        rebuildLearnedItems();
+      }
+    } catch (e) {
+      learnedDurations = {};
+      learnedItems = [];
+    }
+    function learnDuration(label, seconds) {
+      const key = String(label || '').trim().toLowerCase();
+      const val = Number(seconds);
+      if (!key || !Number.isFinite(val) || val <= 0) return;
+      learnedDurations[key] = Math.round(val);
+      rebuildLearnedItems();
+      if (learnedStore) {
+        try { learnedStore.setItem(LEARNED_KEY, JSON.stringify(learnedDurations)); } catch (e) { /* private mode */ }
+      }
     }
 
     function parseAgentCommand(text) {
