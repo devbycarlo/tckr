@@ -1169,9 +1169,58 @@
       }
       for (let i = blocks.length - 1; i >= 0; i--) {
         const el = prependMsg('msg agent', blocks[i]);
-        if (i !== firstTimerIdx && blocks[i].charCodeAt(0) === 0x23f1) el.setAttribute('data-timer', '');
+        if (blocks[i].charCodeAt(0) === 0x23f1) {
+          if (i !== firstTimerIdx) el.setAttribute('data-timer', '');
+          const lines = blocks[i].split('\n');
+          const label = (lines[0] || '').replace(/^⏱\s*/, '').trim();
+          let secs = null;
+          for (const ln of lines) {
+            const p = parseTime(String(ln).trim());
+            if (p !== null) { secs = p; break; }
+          }
+          if (label) el.setAttribute('data-label', label);
+          if (secs !== null) el.setAttribute('data-seconds', String(secs));
+        }
       }
       moveLatestUserAboveReply();
+    }
+
+    function activateTimerDuration(seconds, label) {
+      const secs = Number(seconds);
+      if (!Number.isFinite(secs) || secs <= 0) return false;
+      try { stopTimer(); } catch (e) {}
+      primaryLabel = (label && String(label).trim()) ? String(label).trim() : 'Timer';
+      durationSeconds = secs;
+      remainingSeconds = secs;
+      try { display.classList.remove('alarm-active'); } catch (e) {}
+      updateDisplay();
+      applyBackground(remainingSeconds);
+      try { startTimer(); } catch (e) {}
+      return true;
+    }
+    function activateTimerFromElement(el) {
+      if (!el) return false;
+      let seconds = null;
+      let label = null;
+      try {
+        if (el.dataset) {
+          seconds = el.dataset.seconds || el.dataset.duration || el.dataset.secs || el.dataset.time || el.dataset.timerSeconds || el.dataset.timerDuration || null;
+          label = el.dataset.label || el.dataset.title || el.dataset.name || el.dataset.timerLabel || el.dataset.timerTitle || null;
+        }
+      } catch (e) {}
+      const text = String((el.textContent != null) ? el.textContent : '');
+      if (seconds == null) {
+        const lines = text.split('\n');
+        for (const ln of lines) {
+          const p = parseTime(String(ln).trim());
+          if (p !== null) { seconds = p; break; }
+        }
+      }
+      if (label == null) {
+        const m = text.match(/⏱\s*(.+)/);
+        if (m) label = m[1].trim();
+      }
+      return activateTimerDuration(seconds, label);
     }
 
     function applyChatResult(result) {
@@ -1336,6 +1385,25 @@
       if (!t || t.state !== 'running') return;
       promoteTimer(t);
       renderQueue();
+    });
+
+    if (chatLog) chatLog.addEventListener('click', (event) => {
+      const target = event && event.target;
+      let el = null;
+      const selectors = ['[data-timer]', '[data-timer=""]', '.msg[data-timer]', '[data-seconds]', '[data-duration]', '[data-secs]', '[data-time]', '.timer-title', '.timerTitle', '.timer', '.title', '.duration'];
+      for (const sel of selectors) {
+        if (target && typeof target.closest === 'function') {
+          try {
+            const found = target.closest(sel);
+            if (found) { el = found; break; }
+          } catch (e) {}
+        }
+      }
+      if (!el && target && target.dataset) el = target;
+      if (!el) return;
+      if (activateTimerFromElement(el)) {
+        try { if (event && event.stopPropagation) event.stopPropagation(); } catch (e) {}
+      }
     });
 
     applyBackground(remainingSeconds);
