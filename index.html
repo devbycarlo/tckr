@@ -1182,7 +1182,7 @@
 
     // The example suggestions are launch-only: drop them for good as soon as
     // the user types, so they don't reappear after each submit clears the box.
-    if (chatInput) chatInput.addEventListener('input', () => { chatInput.placeholder = ''; }, { once: true });
+
 
     if (queueEl) queueEl.addEventListener('click', (event) => {
       const chip = event.target && event.target.closest && event.target.closest('.chip');

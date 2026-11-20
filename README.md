@@ -98,7 +98,7 @@ prompts the user to refresh rather than serving a stale shell.
 
 ### License
 
-MIT License  — see [`LICENSE`](LICENSE).
+GPL-3.0  — see [`LICENSE`](LICENSE).
 
 ---
 
