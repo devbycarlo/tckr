@@ -279,6 +279,9 @@
     </form>
   </div>
 
+  <!-- Storage manager for agent system improvements -->
+  <script src="./storage-manager.js"></script>
+
   <script>
     const display = document.getElementById('display');
 
@@ -512,16 +515,106 @@
     const AGENT_COOLDOWN_MS = 60000;
     const AGENT_TIMEOUT_MS = 15000;
     const BUILTIN_TIMEOUT_MS = 20000;
-    const agentStore = (typeof localStorage !== 'undefined') ? localStorage : null;
-    let agentUrl = (agentStore && agentStore.getItem(AGENT_URL_KEY)) || '';
-    let agentDisabled = (agentStore && agentStore.getItem(AGENT_MODE_KEY)) === 'off';
+
+    // ---- Storage manager: resilient storage with fallback + graceful degradation ----
+    const STORAGE_TYPES = { LOCAL: 'local', SESSION: 'session', MEMORY: 'memory' };
+    function createMemoryStorage() {
+      const m = new Map();
+      return {
+        getItem: (k) => (m.has(k) ? m.get(k) : null),
+        setItem: (k, v) => { m.set(k, String(v)); },
+        removeItem: (k) => { m.delete(k); },
+      };
+    }
+    class StorageManager {
+      constructor(primary, fallback) {
+        this.primary = (primary && typeof primary.getItem === 'function') ? primary : null;
+        this.fallback = (fallback && typeof fallback.getItem === 'function') ? fallback : createMemoryStorage();
+        this.memory = createMemoryStorage();
+        this.backend = this.primary || this.fallback;
+        this.type = this.primary ? STORAGE_TYPES.LOCAL : (this.fallback && this.fallback !== this.memory ? STORAGE_TYPES.SESSION : STORAGE_TYPES.MEMORY);
+        this._probe();
+        this._bindEvents();
+      }
+      _probe() {
+        if (!this.primary) { this.backend = this.fallback; this.type = this.fallback === this.memory ? STORAGE_TYPES.MEMORY : STORAGE_TYPES.SESSION; return; }
+        try {
+          const t = '__sm_probe__';
+          this.primary.setItem(t, '1');
+          this.primary.removeItem(t);
+          this.backend = this.primary;
+          this.type = STORAGE_TYPES.LOCAL;
+        } catch (e) {
+          console.warn('StorageManager: primary storage unavailable, using fallback', e);
+          this.backend = this.fallback;
+          this.type = this.fallback === this.memory ? STORAGE_TYPES.MEMORY : STORAGE_TYPES.SESSION;
+        }
+      }
+      _bindEvents() {
+        try {
+          if (typeof window !== 'undefined' && window.addEventListener) {
+            window.addEventListener('storage', (e) => {
+              try { console.debug('StorageManager: storage event', e && e.key); } catch (err) {}
+            });
+          }
+        } catch (e) { /* ignore */ }
+      }
+      _fallback() {
+        if (this.backend !== this.fallback) this.backend = this.fallback;
+        return this.backend;
+      }
+      getType() { return this.type; }
+      get(key) {
+        try { return this.backend.getItem(key); }
+        catch (e) {
+          console.warn('StorageManager: get failed', e);
+          try { return this._fallback().getItem(key); } catch (e2) { return null; }
+        }
+      }
+      set(key, value) {
+        const str = (typeof value === 'string') ? value : (value === null || value === undefined ? '' : JSON.stringify(value));
+        try { this.backend.setItem(key, str); return true; }
+        catch (e) {
+          console.warn('StorageManager: set failed', e);
+          try { this._fallback().setItem(key, str); return true; } catch (e2) {}
+          try { this.memory.setItem(key, str); } catch (e3) {}
+          return false;
+        }
+      }
+      remove(key) {
+        try { this.backend.removeItem(key); return true; }
+        catch (e) {
+          console.warn('StorageManager: remove failed', e);
+          try { this._fallback().removeItem(key); return true; } catch (e2) {}
+          try { this.memory.removeItem(key); } catch (e3) {}
+          return false;
+        }
+      }
+      removeItem(key) { return this.remove(key); }
+    }
+    let _primary = null, _fallback = null;
+    try { if (typeof localStorage !== 'undefined') _primary = localStorage; } catch (e) {}
+    try { if (typeof sessionStorage !== 'undefined') _fallback = sessionStorage; } catch (e) {}
+    const storageUtils = new StorageManager(_primary, _fallback);
+    if (typeof window !== 'undefined') { window.StorageManager = StorageManager; window.STORAGE_TYPES = STORAGE_TYPES; window.storageUtils = storageUtils; }
+    const storage = storageUtils;
+    const isPersistent = storage.getType() === STORAGE_TYPES.LOCAL;
+
+    let agentUrl = storage.get(AGENT_URL_KEY) || '';
+    let agentDisabled = storage.get(AGENT_MODE_KEY) === 'off';
     let agentRequestId = 0;
     const agentCooldown = Object.create(null);
     let agentCache = {};
+
+    // Initialize cache from storage if available
     try {
-      agentCache = JSON.parse((agentStore && agentStore.getItem(AGENT_CACHE_KEY)) || '{}') || {};
-      if (typeof agentCache !== 'object' || Array.isArray(agentCache)) agentCache = {};
+      const cached = storage.get(AGENT_CACHE_KEY);
+      if (cached) {
+        agentCache = typeof cached === 'string' ? JSON.parse(cached) : cached;
+        if (typeof agentCache !== 'object' || Array.isArray(agentCache)) agentCache = {};
+      }
     } catch (e) {
+      console.debug('Error initializing agent cache from storage:', e);
       agentCache = {};
     }
 
@@ -529,17 +622,28 @@
       return String(text).trim().toLowerCase().replace(/\s+/g, ' ');
     }
     function agentCacheGet(text) {
-      const hit = agentCache[agentCacheKey(text)];
+      const key = agentCacheKey(text);
+      const hit = agentCache[key];
       return typeof hit === 'string' ? hit : null;
     }
     function agentCachePut(text, raw) {
-      agentCache[agentCacheKey(text)] = raw;
+      const key = agentCacheKey(text);
+      agentCache[key] = raw;
+
+      // Prune if over max
       const keys = Object.keys(agentCache);
       if (keys.length > AGENT_CACHE_MAX) {
         for (const k of keys.slice(0, keys.length - AGENT_CACHE_MAX)) delete agentCache[k];
       }
-      if (agentStore) {
-        try { agentStore.setItem(AGENT_CACHE_KEY, JSON.stringify(agentCache)); } catch (e) { /* private mode */ }
+
+      // Persist to storage (with error handling)
+      try {
+        const cacheJSON = JSON.stringify(agentCache);
+        storage.set(AGENT_CACHE_KEY, cacheJSON);
+      } catch (e) {
+        // Storage write failure - keep in memory only
+        // Quota exceeded or private mode - don't crash
+        console.debug('Failed to persist agent cache to storage:', e);
       }
     }
     function agentProviderCooling(url) {
@@ -552,7 +656,7 @@
     // ---- Learned durations: remember explicit durations typed by the user ----
     // so a later bare request ("eggs") can reuse the duration they taught.
     const LEARNED_KEY = 'tickr.learned.v1';
-    const learnedStore = agentStore;
+    // Use storage manager for learned durations with automatic fallbacks
     let learnedDurations = {};
     let learnedItems = [];
     function rebuildLearnedItems() {
@@ -563,13 +667,16 @@
       });
     }
     try {
-      const raw = learnedStore && learnedStore.getItem(LEARNED_KEY);
-      const obj = raw ? JSON.parse(raw) : {};
-      if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
-        learnedDurations = obj;
-        rebuildLearnedItems();
+      const cached = storage.get(LEARNED_KEY);
+      if (cached) {
+        const obj = typeof cached === 'string' ? JSON.parse(cached) : cached;
+        if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
+          learnedDurations = obj;
+          rebuildLearnedItems();
+        }
       }
     } catch (e) {
+      console.debug('Error loading learned durations from storage:', e);
       learnedDurations = {};
       learnedItems = [];
     }
@@ -579,8 +686,11 @@
       if (!key || !Number.isFinite(val) || val <= 0) return;
       learnedDurations[key] = Math.round(val);
       rebuildLearnedItems();
-      if (learnedStore) {
-        try { learnedStore.setItem(LEARNED_KEY, JSON.stringify(learnedDurations)); } catch (e) { /* private mode */ }
+      // Persist using storage manager
+      try {
+        storage.set(LEARNED_KEY, learnedDurations);
+      } catch (e) {
+        console.debug('Failed to persist learned duration:', e);
       }
     }
 
@@ -1183,24 +1293,21 @@
         if (cmd.setUrl) {
           agentUrl = cmd.setUrl;
           agentDisabled = false;
-          if (agentStore) {
-            agentStore.setItem(AGENT_URL_KEY, agentUrl);
-            agentStore.removeItem(AGENT_MODE_KEY);
-          }
+          // Persist using storage manager
+          try { storage.set(AGENT_URL_KEY, agentUrl); } catch (e) { /* ignored */ }
+          try { storage.remove(AGENT_MODE_KEY); } catch (e) { /* ignored */ }
         } else if (cmd.off) {
           agentUrl = '';
           agentDisabled = true;
-          if (agentStore) {
-            agentStore.removeItem(AGENT_URL_KEY);
-            agentStore.setItem(AGENT_MODE_KEY, 'off');
-          }
+          // Persist using storage manager
+          try { storage.set(AGENT_MODE_KEY, 'off'); } catch (e) { /* ignored */ }
+          try { storage.remove(AGENT_URL_KEY); } catch (e) { /* ignored */ }
         } else if (cmd.auto) {
           agentUrl = '';
           agentDisabled = false;
-          if (agentStore) {
-            agentStore.removeItem(AGENT_URL_KEY);
-            agentStore.removeItem(AGENT_MODE_KEY);
-          }
+          // Persist using storage manager
+          try { storage.remove(AGENT_URL_KEY); } catch (e) { /* ignored */ }
+          try { storage.remove(AGENT_MODE_KEY); } catch (e) { /* ignored */ }
         }
         appendMsg('agent', cmd.error || agentStatusText());
         return;
