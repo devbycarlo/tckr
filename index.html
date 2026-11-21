@@ -272,7 +272,7 @@
 </head>
 <body>
 
-  <div id="display" contenteditable="true" spellcheck="false" aria-label="Timer duration MM:SS" title="Click to edit (MM:SS)">05:00</div>
+  <div id="display" contenteditable="true" spellcheck="false" aria-live="polite" aria-atomic="true" aria-label="Timer duration MM:SS" title="Click to edit (MM:SS) · Space: start/pause · Enter: commit">05:00</div>
   <div id="timerLabel" aria-live="polite"></div>
   <div id="queue" aria-label="Scheduled timers"></div>
   <div id="chat">
@@ -602,7 +602,6 @@
     const storageUtils = new StorageManager(_primary, _fallback);
     if (typeof window !== 'undefined') { window.StorageManager = StorageManager; window.STORAGE_TYPES = STORAGE_TYPES; window.storageUtils = storageUtils; }
     const storage = storageUtils;
-    const isPersistent = storage.getType() === STORAGE_TYPES.LOCAL;
 
     let agentUrl = storage.get(AGENT_URL_KEY) || '';
     let agentDisabled = storage.get(AGENT_MODE_KEY) === 'off';
@@ -696,6 +695,29 @@
       } catch (e) {
         console.debug('Failed to persist learned duration:', e);
       }
+    }
+
+    function syncStorageState() {
+      try {
+        agentUrl = storage.get(AGENT_URL_KEY) || '';
+        agentDisabled = storage.get(AGENT_MODE_KEY) === 'off';
+        const cached = storage.get(AGENT_CACHE_KEY);
+        if (cached) {
+          const parsed = typeof cached === 'string' ? JSON.parse(cached) : cached;
+          if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) agentCache = parsed;
+        }
+        const learned = storage.get(LEARNED_KEY);
+        if (learned) {
+          const obj = typeof learned === 'string' ? JSON.parse(learned) : learned;
+          if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
+            learnedDurations = obj;
+            rebuildLearnedItems();
+          }
+        }
+      } catch (e) { /* ignore */ }
+    }
+    if (typeof window !== 'undefined' && window.addEventListener) {
+      window.addEventListener('storage', () => { syncStorageState(); });
     }
 
     function parseAgentCommand(text) {
@@ -1329,7 +1351,7 @@
         appendMsg('agent', 'I couldn\'t find a duration and the ' + who + ' ' + why + '. Try again or add a time, e.g. "' + text + ' 10 minutes".');
         return;
       }
-      appendMsg('agent', 'I couldn\'t confirm a duration for "' + text + '" with the built-in AI right now (status ' + (lastStatus || (timedOut ? 'timeout' : 'offline')) + '). Add a time, e.g. "' + text + ' 10 minutes".');
+      appendMsg('agent', 'I couldn\'t confirm a duration for "' + text + '" (status ' + (lastStatus || (timedOut ? 'timeout' : 'Offline')) + '). Add a time, e.g. "' + text + ' 10 minutes".');
     }
 
     function handleChatSubmit(event) {

@@ -252,7 +252,7 @@ StorageManager.prototype._switchToMemory = function () {
   try {
     const memoryStore = new Map();
     const cacheKey = 'tickr.agent.cache.v1';
-    try { const raw = this.store.getItem(cacheKey); if (raw) { const parsed = JSON.parse(raw); if (typeof parsed === 'object' && !Array.isArray(parsed)) { Object.entries(parsed).forEach(([k, v]) => memoryStore.set(k, v)); } } catch (e) {} }
+    try { const raw = this.store.getItem(cacheKey); if (raw) { const parsed = JSON.parse(raw); if (typeof parsed === 'object' && !Array.isArray(parsed)) { Object.entries(parsed).forEach(([k, v]) => memoryStore.set(k, v)); } } } catch (e) { }
     const prefKeys = ['tickr.agent.url', 'tickr.agent.mode'];
     prefKeys.forEach(key => { try { const val = this.store.getItem(key); if (val !== null) memoryStore.set(key, val); } catch (e) {} });
     this.type = STORAGE_TYPES.MEMORY;
