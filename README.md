@@ -1,89 +1,69 @@
-# tickr
+# ⏱️ tickr
 
-A minimal, full-screen countdown timer PWA — a static site with **no build step**.
-Type a duration in plain words, and tickr parses it, schedules the timer(s),
-and counts down on a large live display.
+> **A full-screen countdown timer that speaks human.**  
+> Type `eggs`, `pasta 10 minutes`, or `chicken 45m, asparagus 12m, finish at 7pm` — tickr figures out the durations and runs the timers. No build step, no fuss. ✨
 
-```text
-05:00          <- click to edit (MM:SS)  ·  Space = start/pause  ·  Enter = commit
-```
+![Static Site](https://img.shields.io/badge/site-static-111?style=flat-square)
+![PWA](https://img.shields.io/badge/PWA-installable-5a67d8?style=flat-square)
+![Tests](https://img.shields.io/badge/tests-node%20--test-38a169?style=flat-square)
+![License](https://img.shields.io/badge/license-GPL--3.0-e53e3e?style=flat-square)
 
 ---
 
-### What it does
+## 🎯 What it does
 
-- **Countdown display.** Large `MM:SS` timer you can click to edit directly.
-  `Space` starts/pauses, `Enter` commits an edit and starts the timer.
-- **Natural-language durations.** `eggs`, `pasta 10 minutes`, `chicken 45m,
-  asparagus 12m, finish at 7pm`, `timer until 3:15 PM` — a small parser turns
-  them into one or more staggered timers (longest first, running in
-  chronological order). Each timer name, duration, and optional tip is shown.
-- **Chat input.** A bottom form for plain-text requests that get parsed and
-  staged into the queue.
+- **Big, clickable countdown.** Large `MM:SS` display — click to edit, `Space` to start/pause, `Enter` to commit.
+- **Natural-language durations.** A tiny parser turns plain words into one or more staggered timers (longest first, in chronological order). Each timer shows its name, duration, and a helpful tip.
+- **Chat input.** A bottom form for plain-text requests that get parsed and staged into the queue.
 - **Scheduled queue.** At-a-glance list of upcoming timers.
-- **AI duration lookup.** When no local duration is recognised, tickr asks an
-  AI agent for a sensible duration and starts the timer from the answer — no
-  key, account, or webhook needed for the built-in providers.
-- **Installable PWA.** Service worker, web manifest, app icons. Shell caches
-  offline; the page is a single `index.html` with a catch-all rewrite.
+- **AI duration lookup.** No local match? tickr asks an AI agent for a sensible duration and starts the timer from the answer — **no key, account, or webhook needed** for the built-in providers.
+- **Installable PWA.** Service worker + manifest + icons. Shell caches offline; the whole app is a single `index.html`.
 
 ---
 
-### AI agent system
+## 🤖 AI agent system
 
 | Command | Effect |
 | --- | --- |
 | `/agent` | Show the current mode |
-| `/agent off` | Turn lookups off (tickr then shows the local "no duration" error) |
+| `/agent off` | Turn lookups off (tickr shows the local "no duration" error) |
 | `/agent auto` | Switch back to the built-in AI (the default) |
 | `/agent https://…` | Point lookups at your own agent endpoint (saved in this browser) |
 
-**Built-in AI** (keyless, no webhook to configure) uses two independent,
-CORS-enabled providers with automatic failover — `text.pollinations.ai` and
-`api.apillmfree.com` — each with a ~20 s timeout. It expects one JSON object,
-e.g. `{"label":"Brisket","seconds":28800,"tip":"Rest before slicing."}`.
-Fenced JSON, plain text containing a duration, and
-OpenAI-style `choices[0].message.content` replies are all accepted.
+**Built-in AI** (keyless, no webhook) uses two independent, CORS-enabled providers with automatic failover — `text.pollinations.ai` and `api.apillmfree.com` — each with a ~20 s timeout. It expects one JSON object, e.g. `{"label":"Brisket","seconds":28800,"tip":"Rest before slicing."}`. Fenced JSON, plain text containing a duration, and OpenAI-style `choices[0].message.content` replies are all accepted.
 
-**Custom agent** — receive `{"app":"tickr","request":"…"}` and answer with
-`{"label":"…","seconds":720}`, `{"timers":[…]}`, plain text, or MCP-style
-`{content:[{type:"text",text:"…"}]}` blocks. 15 s timeout.
+**Custom agent** — receive `{"app":"tickr","request":"…"}` and answer with `{"label":"…","seconds":720}`, `{"timers":[…]}`, plain text, or MCP-style `{content:[{type:"text",text:"…"}]}` blocks. 15 s timeout.
 
-> Use `/agent off` if you don't want the app to reach out to a third-party AI.
+> 💡 Use `/agent off` if you don't want the app to reach out to a third-party AI.
 
 ---
 
-### Install & run (locally)
+## 🚀 Install & run (locally)
 
 ```bash
-npm install      # only to run the test suite
+npm install      # only needed to run the test suite
 npm test
 # open index.html in a browser (or serve the folder, e.g. `npx serve .`)
 ```
 
-No build step, no dependencies beyond Node for tests. `npm test` runs the suite
-with Node's built-in test runner (`node --test`).
+No build step, no dependencies beyond Node for tests. `npm test` runs the suite with Node's built-in test runner (`node --test`).
 
 ---
 
-### Deploy
+## ☁️ Deploy
 
-Firebase Hosting. `firebase.json` serves the folder as `tickr-78b4b` (see
-`.firebaserc`), rewrites every route to `index.html`, and sets short max-age
-headers on the service worker so updates take effect while keeping other
-assets stale-for-a-moment.
+Firebase Hosting. `firebase.json` serves the folder as `tickr-78b4b` (see `.firebaserc`), rewrites every route to `index.html`, and sets short max-age headers on the service worker so updates take effect while keeping other assets stale-for-a-moment.
 
 ```bash
 firebase login
 firebase deploy
 ```
 
-The service worker is cached `no-cache`/controlled per-file so a new deploy
-prompts the user to refresh rather than serving a stale shell.
+The service worker is cached `no-cache`/controlled per-file so a new deploy prompts the user to refresh rather than serving a stale shell.
 
 ---
 
-### Files
+## 📁 Files
 
 | Path | Purpose |
 | --- | --- |
@@ -96,11 +76,10 @@ prompts the user to refresh rather than serving a stale shell.
 
 ---
 
-### License
+## 📜 License
 
-GPL-3.0  — see [`LICENSE`](LICENSE).
+GPL-3.0 — see [`LICENSE`](LICENSE).
 
 ---
 
-**Repository**: [devbycarlo/tckr](https://github.com/devbycarlo/tckr) — kept in
-sync with the deployed site; update it on every successful commit & deploy.
+**Repository**: [devbycarlo/tckr](https://github.com/devbycarlo/tckr) — kept in sync with the deployed site; update it on every successful commit & deploy.
